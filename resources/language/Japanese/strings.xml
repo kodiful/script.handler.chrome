@@ -7,10 +7,7 @@
       strings 33000 thru 33999 reserved for common strings used in add-ons
   -->
   <string id="32000">Selenium設定</string>
-  <string id="32001">ブラウザ</string>
   <string id="32011">Chrome webdriverのパス</string>
-  <string id="32012">Firefox webdriverのパス</string>
-  <string id="32013">Safari webdriverのパス</string>
 
   <string id="32100">その他</string>
   <string id="32104">デバッグ</string>

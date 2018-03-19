@@ -7,10 +7,7 @@
       strings 33000 thru 33999 reserved for common strings used in add-ons
   -->
   <string id="32000">Selenium Settings</string>
-  <string id="32001">Browser</string>
   <string id="32011">Path to Chrome webdriver</string>
-  <string id="32012">Path to Firefox webdriver</string>
-  <string id="32013">Path to Safari webdriver</string>
 
   <string id="32100">Others</string>
   <string id="32104">Debug</string>

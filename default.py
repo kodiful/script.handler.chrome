@@ -9,29 +9,15 @@ from resources.lib.common import log, notify
 # import selenium
 addon = xbmcaddon.Addon()
 addon_path = xbmc.translatePath(addon.getAddonInfo('path'))
-sys.path.append(os.path.join(addon_path, 'resources', 'lib'))
+sys.path.append(os.path.join(addon_path, 'resources', 'lib', 'selenium-3.11.0'))
 from selenium import webdriver
 
 #-------------------------------------------------------------------------------
 def main():
     # アドオン設定を確認
-    browser = addon.getSetting('browser')
-    driver = None
-    if browser == 'Chrome':
-        path = addon.getSetting('chrome')
-        if path:
-            driver = webdriver.Chrome(path)
-    elif browser == 'Firefox':
-        path = addon.getSetting('firefox')
-        if path:
-            driver = webdriver.Firefox(path)
-    elif browser == 'Safari':
-        path = addon.getSetting('safari')
-        if path:
-            driver = webdriver.Safari(path)
-
-    if browser and driver:
-        pass
+    path = addon.getSetting('chrome')
+    if path:
+        driver = webdriver.Chrome(path)
     else:
         addon.openSettings()
         return

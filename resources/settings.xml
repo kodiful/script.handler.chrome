@@ -6,10 +6,7 @@
       strings 33000 thru 33999 reserved for common strings used in add-ons
   -->
   <category label="32000">
-    <setting label="32001" id="browser" type="labelenum" values="Chrome|Firefox|Safari" default="Chrome"/>
-    <setting label="32011" id="chrome" type="file" default="" visible="eq(-1,0)"/>
-    <setting label="32012" id="firefox" type="file" default="" visible="eq(-2,1)"/>
-    <setting label="32013" id="safari" type="file" default="" visible="eq(-3,2)"/>
+    <setting label="32011" id="chrome" type="file" default=""/>
   </category>
   <category label="32100">
     <setting label="32104" id="debug" type="bool" default="false"/>
