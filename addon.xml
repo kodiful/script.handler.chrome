@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="script.handler.selenium"
+       name="Selenium Handler"
+       version="1.0"
+       provider-name="kodiful">
+  <requires>
+    <import addon="xbmc.python" version="2.1.0"/>
+  </requires>
+  <extension point="xbmc.python.pluginsource" library="default.py">
+    <provides>executable</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <platform>all</platform>
+    <summary lang="en">Web browser automator</summary>
+    <summary lang="ja">ウェブブラウザ自動化</summary>
+    <description lang="en">Web browser automation through Selenium</description>
+    <description lang="ja">Seleniumによるウェブブラウザ自動化</description>
+    <disclaimer lang="en">Tested on macOS</disclaimer>
+    <disclaimer lang="ja">macOSでの動作を確認</disclaimer>
+    <website>http://kodiful.com/</website>
+  </extension>
+</addon>

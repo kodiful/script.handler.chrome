@@ -1,0 +1,16 @@
+<settings>
+  <!--
+      strings 30000 thru 30999 reserved for plugins and plugin settings
+      strings 31000 thru 31999 reserved for skins
+      strings 32000 thru 32999 reserved for scripts
+      strings 33000 thru 33999 reserved for common strings used in add-ons
+  -->
+  <category label="32000">
+    <setting label="32001" id="browser" type="labelenum" values="Chrome|Firefox" default="Chrome"/>
+    <setting label="32011" id="chrome" type="file" default="" visible="eq(-1,0)"/>
+    <setting label="32012" id="firefox" type="file" default="" visible="eq(-2,1)"/>
+  </category>
+  <category label="32100">
+    <setting label="32104" id="debug" type="bool" default="false"/>
+  </category>
+</settings>
