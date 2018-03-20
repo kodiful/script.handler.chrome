@@ -9,15 +9,21 @@ from resources.lib.common import log, notify
 # import selenium
 addon = xbmcaddon.Addon()
 addon_path = xbmc.translatePath(addon.getAddonInfo('path'))
-sys.path.append(os.path.join(addon_path, 'resources', 'lib', 'selenium-3.11.0'))
+sys.path.append(os.path.join(addon_path, 'resources', 'lib', 'selenium-3.9.0'))
 from selenium import webdriver
 
 #-------------------------------------------------------------------------------
 def main():
     # アドオン設定を確認
-    path = addon.getSetting('chrome')
-    if path:
-        driver = webdriver.Chrome(path)
+    browser = addon.getSetting('browser')
+    if browser == 'Chrome':
+        path = addon.getSetting('chrome')
+        if path:
+            driver = webdriver.Chrome(path)
+        else:
+            driver = webdriver.Chrome()
+    elif browser == 'Safari':
+        driver = webdriver.Safari()
     else:
         addon.openSettings()
         return
@@ -27,11 +33,13 @@ def main():
     action = args.get('action', None)
 
     if action is None:
-        driver.get('https://www.yahoo.co.jp/')
-        #text = driver.find_element_by_id("srchAssistTxt").text
-        text = driver.title
-        log(text)
-        notify(text)
+        url = 'https://www.yahoo.co.jp/'
+        filepath = '/tmp/selenium.png'
+
+        driver.maximize_window()
+        driver.get(url)
+        driver.save_screenshot(filepath)
+        xbmc.executebuiltin('ShowPicture(%s)' % filepath)
     elif action[0] == 'settings':
         xbmc.executebuiltin('Addon.OpenSettings(%s)' % addon.getAddonInfo('id'))
 

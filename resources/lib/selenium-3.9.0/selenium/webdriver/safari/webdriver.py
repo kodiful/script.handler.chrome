@@ -22,6 +22,7 @@ except ImportError:
 
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.remote.webdriver import WebDriver as RemoteWebDriver
+from .service import Service
 
 
 class WebDriver(RemoteWebDriver):
@@ -30,23 +31,20 @@ class WebDriver(RemoteWebDriver):
 
     """
 
-    def __init__(self, port=0, executable_path="/usr/bin/safaridriver", reuse_service=False,
+    def __init__(self, port=0, executable_path="/usr/bin/safaridriver",
                  desired_capabilities=DesiredCapabilities.SAFARI, quiet=False):
         """
+        Creates a new instance of the Safari driver.
 
-        Creates a new Safari driver instance and launches or finds a running safaridriver service.
+        Starts the service and then creates new instance of Safari Driver.
 
         :Args:
-         - port - The port on which the safaridriver service should listen for new connections. If zero, a free port will be found.
-         - quiet - If True, the driver's stdout and stderr is suppressed.
-         - executable_path - Path to a custom safaridriver executable to be used. If absent, /usr/bin/safaridriver is used.
+         - port - port you would like the service to run, if left as 0, a free port will be found.
          - desired_capabilities: Dictionary object with desired capabilities (Can be used to provide various Safari switches).
-         - reuse_service - If True, do not spawn a safaridriver instance; instead, connect to an already-running service that was launched externally.
+         - quiet - set to True to suppress stdout and stderr of the driver
         """
-
-        self._reuse_service = reuse_service
-        if not reuse_service:
-            self.service.start()
+        self.service = Service(executable_path, port=port, quiet=quiet)
+        self.service.start()
 
         RemoteWebDriver.__init__(
             self,
@@ -64,5 +62,4 @@ class WebDriver(RemoteWebDriver):
         except http_client.BadStatusLine:
             pass
         finally:
-            if not self._reuse_service:
-                self.service.stop()
+            self.service.stop()
