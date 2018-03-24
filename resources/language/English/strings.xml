@@ -11,8 +11,4 @@
 
   <string id="32100">Others</string>
   <string id="32104">Debug</string>
-
-  <string id="32901">Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec</string>
-  <string id="32902">Mon,Tue,Wed,Thu,Fri,Sat,Sun</string>
-  <string id="32903">{day7}, {day} {month} {hour}:{minute}</string>
 </strings>
