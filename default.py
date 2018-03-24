@@ -22,6 +22,6 @@ if __name__  == '__main__':
         #browser.load(url[0] or 'https://www.yahoo.co.jp/')
         # LINE
         line = Line(executable_path)
-        line.load()
+        line.start()
     else:
         ADDON.openSettings()

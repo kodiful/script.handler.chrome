@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import os
+import os, datetime, hashlib
 import xbmc, xbmcaddon
 
 class Cache:
@@ -17,3 +17,10 @@ class Cache:
         file_list = os.listdir(self.path)
         for file_path in file_list:
             os.remove(os.path.join(self.path, file_path))
+
+    def filename(self, key=None, ext='txt'):
+        if key:
+            filename = '%s.%s' % (hashlib.md5(key).hexdigest(), ext)
+        else:
+            filename = '%s.%s' % (datetime.now().strftime('%s'), ext)
+        return os.path.join(self.path, filename)
