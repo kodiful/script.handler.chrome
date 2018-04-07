@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import sys, os, json
-import datetime
 import urllib
 import xbmc, xbmcgui, xbmcplugin, xbmcaddon
 
+from browser import Browser
 from common import log
 
 #-------------------------------------------------------------------------------
@@ -34,6 +34,7 @@ class Start:
         return self.data
 
     def write(self):
+        self.data = sorted(self.data, key=lambda elem: elem['label'] or elem['url'])
         f = open(self.filepath,'w')
         f.write(json.dumps(self.data, sort_keys=True, ensure_ascii=False, indent=2).encode('utf-8'))
         f.close()
@@ -57,15 +58,27 @@ class Start:
         # スタート画面を更新
         xbmc.executebuiltin('Container.Update(plugin://%s)' % addon.getAddonInfo('id'))
 
-    def update(self):
+    def edit(self, label, url, xpath, mode):
+        addon = xbmcaddon.Addon()
+        # 設定画面に反映
+        addon.setSetting('url1', url)
+        addon.setSetting('xpath1', xpath)
+        addon.setSetting('url', url)
+        addon.setSetting('label', label)
+        addon.setSetting('xpath', xpath)
+        addon.setSetting('mode', mode)
+        # 設定画面を開く
+        addon.openSettings()
+
+    def edited(self, settings):
         addon = xbmcaddon.Addon()
         # 設定を取得
-        url1 = addon.getSetting('url1')
-        xpath1 = addon.getSetting('xpath1')
-        url = addon.getSetting('url')
-        label = addon.getSetting('label')
-        xpath = addon.getSetting('xpath')
-        mode = addon.getSetting('mode')
+        url1 = settings['url1']
+        xpath1 = settings['xpath1']
+        url = settings['url']
+        label = settings['label']
+        xpath = settings['xpath']
+        mode = settings['mode']
         # 文字コード変換
         if isinstance(label, str): label = label.decode('utf-8')
         if isinstance(url, str): url = url.decode('utf-8')
@@ -100,32 +113,25 @@ class Start:
         # スタート画面を更新
         xbmc.executebuiltin('Container.Update(plugin://%s)' % addon.getAddonInfo('id'))
 
-    def edit(self, label, url, xpath, mode):
+    def show(self, executable_path=None):
         addon = xbmcaddon.Addon()
-        # 設定画面に反映
-        addon.setSetting('url1', url)
-        addon.setSetting('xpath1', xpath)
-        addon.setSetting('url', url)
-        addon.setSetting('label', label)
-        addon.setSetting('xpath', xpath)
-        addon.setSetting('mode', mode)
-        # 設定画面を開く
-        addon.openSettings()
-
-    def show(self):
-        addon = xbmcaddon.Addon()
+        # タイトル補完
         for data in self.data:
-            # 設定ファイルのエントリ
+            if data['label'] == '':
+                data['label'] = Browser(executable_path).load(data['url'], data['xpath'], mode=Browser.MODE_TITLE)
+        self.write()
+        # 表示
+        for data in self.data:
             url = data['url']
             label = data['label']
             xpath = data['xpath']
             mode = data['mode']
             # コンテクストメニュー
             menu = []
-            values = {'action':'edititem', 'label':label, 'url':url, 'xpath':xpath, 'mode':mode}
+            values = {'action':'edit', 'label':label.encode('utf-8'), 'url':url, 'xpath':xpath, 'mode':mode}
             query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             menu.append((addon.getLocalizedString(32911), query))
-            values = {'action':'deleteitem', 'url':url, 'xpath':xpath}
+            values = {'action':'delete', 'url':url, 'xpath':xpath}
             query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             menu.append((addon.getLocalizedString(32912), query))
             menu.append((addon.getLocalizedString(32913), 'Addon.OpenSettings(%s)' % addon.getAddonInfo('id')))

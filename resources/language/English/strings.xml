@@ -27,4 +27,8 @@
   <string id="32911">Edit page</string>
   <string id="32912">Delete page</string>
   <string id="32913">Addon settings</string>
-<</strings>
+  <string id="32914">Drill down</string>
+
+  <string id="32921">(Page)</string>
+  <string id="32922">(Node)</string>
+</strings>
