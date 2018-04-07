@@ -21,8 +21,8 @@ class Browser:
     initial_width = 1152
     #initial_height = 648
     initial_height = 4096
+
     threshold_size = 400
-    threshold_numder = 3
 
     MODE_LINKLIST = 0
     MODE_DRILLDOWN = 1
@@ -37,6 +37,8 @@ class Browser:
         self.driver = webdriver.Chrome(executable_path=executable_path, chrome_options=chrome_options)
         # キャッシュディレクトリを作成
         self.cache = Cache()
+        # セッションを特定するIDとして時刻を格納
+        self.session = datetime.now().strftime('%s')
 
     def __capture(self, element, filepath):
         size = element.size
@@ -95,20 +97,19 @@ class Browser:
                     result = result + self.__traverse(xpath1)
         return result
 
-    def load(self, url, xpath='//body', mode=MODE_LINKLIST):
+    def load(self, url, xpath, mode=MODE_LINKLIST):
         # ページ読み込み
         self.driver.implicitly_wait(10)
         self.driver.get(url)
         self.url = url
         self.mode = int(mode)
-        # セッションを特定するIDとして時刻を格納
-        self.session = datetime.now().strftime('%s')
         # 全体をキャプチャ
         image = self.driver.get_screenshot_as_png()
         self.image = Image.open(StringIO(image))
         self.image_file = os.path.join(self.cache.path, '%s_%s.png' % (self.session,hashlib.md5(url).hexdigest()))
         self.image.save(self.image_file)
         # 画面表示
+        if not xpath: xpath = '//body'
         if self.mode == self.MODE_DRILLDOWN:
             self.load1(url, xpath)
         elif self.mode == self.MODE_LINKLIST:

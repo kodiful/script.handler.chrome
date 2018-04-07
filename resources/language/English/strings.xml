@@ -6,9 +6,25 @@
       strings 32000 thru 32999 reserved for scripts
       strings 33000 thru 33999 reserved for common strings used in add-ons
   -->
+  <string id="32200">Page Settings</string>
+  <string id="32201">URL</string>
+  <string id="32202">Label</string>
+  <string id="32203">XPATH</string>
+  <string id="32204">Mode</string>
+  <string id="32205">[COLOR green]Append[/COLOR]</string>
+  <string id="32206">[COLOR green]Update[/COLOR]</string>
+
   <string id="32000">Selenium Settings</string>
   <string id="32011">Path to chromedriver</string>
 
   <string id="32100">Others</string>
   <string id="32104">Debug</string>
-</strings>
+
+  <string id="32901">Link list</string>
+  <string id="32902">Drill down</string>
+  <string id="32903">Page capture</string>
+
+  <string id="32911">Edit page</string>
+  <string id="32912">Delete page</string>
+  <string id="32913">Addon settings</string>
+<</strings>
