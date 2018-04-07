@@ -51,6 +51,8 @@ if __name__  == '__main__':
             Browser(executable_path).load(url=url, xpath=xpath, mode=Browser.MODE_CAPTURE)
         elif action == 'showcapture':
             xbmc.executebuiltin('ShowPicture(%s)' % file)
+        elif action == 'append':
+            Start().append(label, url, xpath, mode)
         elif action == 'edit':
             Start().edit(label, url, xpath, mode)
         elif action == 'edited':

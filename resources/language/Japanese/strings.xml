@@ -6,7 +6,7 @@
       strings 32000 thru 32999 reserved for scripts
       strings 33000 thru 33999 reserved for common strings used in add-ons
   -->
-  <string id="32200">ページ設定</string>
+  <string id="32200">項目設定</string>
   <string id="32201">URL</string>
   <string id="32202">ラベル</string>
   <string id="32203">XPATH</string>
@@ -14,20 +14,19 @@
   <string id="32205">[COLOR green]追加する[/COLOR]</string>
   <string id="32206">[COLOR green]更新する[/COLOR]</string>
 
-  <string id="32000">Selenium設定</string>
-  <string id="32011">chromedriverのパス</string>
-
-  <string id="32100">その他</string>
-  <string id="32104">デバッグ</string>
+  <string id="32300">その他</string>
+  <string id="32301">chromedriverのパス</string>
+  <string id="32302">デバッグ</string>
 
   <string id="32901">リンクリスト</string>
-  <string id="32902">ドリルダウン</string>
-  <string id="32903">ページキャプチャ</string>
+  <string id="32902">子ノードリスト</string>
+  <string id="32903">キャプチャ</string>
 
-  <string id="32911">ページを編集する</string>
-  <string id="32912">ページを削除する</string>
+  <string id="32911">項目を編集する</string>
+  <string id="32912">項目を削除する</string>
   <string id="32913">アドオン設定</string>
-  <string id="32914">ドリルダウン</string>
+  <string id="32914">子ノードを表示する</string>
+  <string id="32915">トップに追加する</string>
 
   <string id="32921">（ページ）</string>
   <string id="32922">（ノード）</string>

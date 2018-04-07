@@ -18,8 +18,8 @@ class Browser:
 
     threshold_size = 400
 
-    MODE_LINKLIST = 0
-    MODE_DRILLDOWN = 1
+    MODE_DRILLDOWN = 0
+    MODE_LINKLIST = 1
     MODE_CAPTURE = 2
     MODE_TITLE = 3
 
@@ -73,6 +73,9 @@ class Browser:
                         values = {'action':'traverse', 'url':self.url, 'xpath':xpath1, 'mode':self.mode}
                         query = 'Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
                         menu.append((self.addon.getLocalizedString(32914), query))
+                        values = {'action':'append', 'label':self.driver.title.encode('utf-8'), 'url':self.url, 'xpath':xpath1, 'mode':self.mode}
+                        query = 'Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
+                        menu.append((self.addon.getLocalizedString(32915), query))
                         # リンクを抽出してコンテクストメニューに設定
                         for a in elems[i].find_elements_by_tag_name("a"):
                             text = a.text or a.get_attribute('title') or a.get_attribute('alt') or ''
@@ -103,6 +106,9 @@ class Browser:
         self.driver.get(url)
         self.url = url
         self.mode = int(mode)
+        log(url)
+        log(xpath)
+        log(mode)
         # 全体をキャプチャ
         image = self.driver.get_screenshot_as_png()
         self.image = Image.open(StringIO(image))
@@ -168,7 +174,7 @@ class Browser:
                 values = {'action':'traverse', 'url':href, 'mode':self.mode}
                 query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
                 item = xbmcgui.ListItem('[COLOR blue]%s[/COLOR]' % text)
-                xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, False)
+                xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, True)
         xbmcplugin.endOfDirectory(int(sys.argv[1]), True)
 
     def load3(self, url, xpath):

@@ -71,7 +71,6 @@ class Start:
         addon.openSettings()
 
     def edited(self, settings):
-        addon = xbmcaddon.Addon()
         # 設定を取得
         url1 = settings['url1']
         xpath1 = settings['xpath1']
@@ -79,6 +78,11 @@ class Start:
         label = settings['label']
         xpath = settings['xpath']
         mode = settings['mode']
+        # 設定更新
+        self.append(label, url, xpath, mode, url1, xpath1)
+
+    def append(self, label, url, xpath, mode, url1=None, xpath1=None):
+        addon = xbmcaddon.Addon()
         # 文字コード変換
         if isinstance(label, str): label = label.decode('utf-8')
         if isinstance(url, str): url = url.decode('utf-8')
