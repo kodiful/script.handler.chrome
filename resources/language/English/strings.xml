@@ -29,6 +29,8 @@
   <string id="32914">Show children</string>
   <string id="32915">Add to top</string>
 
-  <string id="32921">Page</string>
-  <string id="32922">Node</string>
+  <string id="32921">Show link list</string>
+  <string id="32922">Show node list</string>
+  <string id="32923">Show capture</string>
+  <string id="32924">Show text</string>
 </strings>

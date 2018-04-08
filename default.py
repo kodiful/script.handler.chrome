@@ -35,7 +35,7 @@ if __name__  == '__main__':
         label = args.get('label', [''])[0]
         url = args.get('url', [''])[0]
         xpath = args.get('xpath', [''])[0]
-        mode = args.get('mode', [Browser.MODE_DRILLDOWN])[0]
+        mode = args.get('mode', [Browser.MODE_NODELIST])[0]
         file = args.get('file', [''])[0]
         # アドオン設定
         settings = Settings(('url1','xpath1','url','label','xpath','mode')).clear()
@@ -47,8 +47,6 @@ if __name__  == '__main__':
             Start().show(executable_path)
         elif action == 'traverse':
             Browser(executable_path).load(url=url, xpath=xpath, mode=mode)
-        elif action == 'capture':
-            Browser(executable_path).load(url=url, xpath=xpath, mode=Browser.MODE_CAPTURE)
         elif action == 'showcapture':
             xbmc.executebuiltin('ShowPicture(%s)' % file)
         elif action == 'append':

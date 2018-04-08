@@ -122,7 +122,8 @@ class Start:
         # タイトル補完
         for data in self.data:
             if data['label'] == '':
-                data['label'] = Browser(executable_path).load(data['url'], data['xpath'], mode=Browser.MODE_TITLE)
+                info = Browser(executable_path).load(data['url'], data['xpath'])
+                data['label'] = info['title'] or '(Untitled)'
         self.write()
         # 表示
         for data in self.data:
@@ -132,6 +133,18 @@ class Start:
             mode = data['mode']
             # コンテクストメニュー
             menu = []
+            values = {'action':'traverse', 'url':url, 'xpath':xpath, 'mode':Browser.MODE_NODELIST}
+            query = 'Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
+            menu.append((addon.getLocalizedString(32922), query))
+            values = {'action':'traverse', 'url':url, 'xpath':xpath, 'mode':Browser.MODE_LINKLIST}
+            query = 'Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
+            menu.append((addon.getLocalizedString(32921), query))
+            values = {'action':'traverse', 'url':url, 'xpath':xpath, 'mode':Browser.MODE_CAPTURE}
+            query = 'Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
+            menu.append((addon.getLocalizedString(32923), query))
+            values = {'action':'traverse', 'url':url, 'xpath':xpath, 'mode':Browser.MODE_TEXT}
+            query = 'Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
+            menu.append((addon.getLocalizedString(32924), query))
             values = {'action':'edit', 'label':label.encode('utf-8'), 'url':url, 'xpath':xpath, 'mode':mode}
             query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             menu.append((addon.getLocalizedString(32911), query))

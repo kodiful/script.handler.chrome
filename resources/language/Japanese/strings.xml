@@ -29,6 +29,8 @@
   <string id="32914">子ノードを表示する</string>
   <string id="32915">トップに追加する</string>
 
-  <string id="32921">ページ</string>
-  <string id="32922">ノード</string>
+  <string id="32921">リンクリストを表示する</string>
+  <string id="32922">ノードリストを表示する</string>
+  <string id="32923">キャプチャを表示する</string>
+  <string id="32924">テキストを表示する</string>
 </strings>
