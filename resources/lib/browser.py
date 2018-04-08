@@ -200,5 +200,5 @@ class Browser:
         xbmc.sleep(1000)
         # ウィンドウへ書き込む
         viewer = xbmcgui.Window(viewer_id)
-        viewer.getControl(1).setLabel(self.driver.title or (Untitled))
+        viewer.getControl(1).setLabel(self.driver.title or '(Untitled)')
         viewer.getControl(5).setText(self.node_text)
