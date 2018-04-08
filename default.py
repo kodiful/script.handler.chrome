@@ -27,15 +27,14 @@ class Settings:
 #-------------------------------------------------------------------------------
 if __name__  == '__main__':
     addon = xbmcaddon.Addon()
-    executable_path = addon.getSetting('chrome')
-    if executable_path:
+    if addon.getSetting('chrome'):
         # 引数
         args = urlparse.parse_qs(sys.argv[2][1:])
         action = args.get('action', [None])[0]
         label = args.get('label', [''])[0]
         url = args.get('url', [''])[0]
         xpath = args.get('xpath', [''])[0]
-        mode = args.get('mode', [Browser.MODE_NODELIST])[0]
+        mode = args.get('mode', [''])[0]
         file = args.get('file', [''])[0]
         # アドオン設定
         settings = Settings(('url1','xpath1','url','label','xpath','mode')).clear()
@@ -44,9 +43,9 @@ if __name__  == '__main__':
             # キャッシュをクリア
             Cache().clear()
             # スタート画面を表示
-            Start().show(executable_path)
+            Start().show()
         elif action == 'traverse':
-            Browser(executable_path).load(url=url, xpath=xpath, mode=mode)
+            Browser(url=url).load(xpath=xpath, mode=mode)
         elif action == 'showcapture':
             xbmc.executebuiltin('ShowPicture(%s)' % file)
         elif action == 'append':

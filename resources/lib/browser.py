@@ -13,9 +13,7 @@ from StringIO import StringIO
 class Browser:
 
     initial_width = 1152
-    #initial_height = 648
-    #initial_height = 4096
-    initial_height = 8192
+    initial_height = 648
 
     threshold_size = 400
 
@@ -24,22 +22,35 @@ class Browser:
     MODE_CAPTURE = 2
     MODE_TEXT = 3
 
-    def __init__(self, executable_path):
+    def __init__(self, url):
         # アドオン
         self.addon = xbmcaddon.Addon()
         sys.path.append(os.path.join(xbmc.translatePath(self.addon.getAddonInfo('path')), 'resources', 'lib', 'selenium-3.9.0'))
         from selenium import webdriver
         from selenium.webdriver.chrome.options import Options
-        # ウェブドライバを設定
-        chrome_options = Options()
-        chrome_options.add_argument('headless')
-        chrome_options.add_argument('disable-gpu')
-        chrome_options.add_argument('window-size=%d,%d' % (self.initial_width,self.initial_height))
-        self.driver = webdriver.Chrome(executable_path=executable_path, chrome_options=chrome_options)
+        # URLを格納
+        self.url = url
         # キャッシュディレクトリを作成
         self.cache = Cache()
         # セッションIDとして時刻を格納
         self.session = datetime.now().strftime('%s')
+        # ウェブドライバを設定
+        executable_path = self.addon.getSetting('chrome')
+        chrome_options = Options()
+        chrome_options.add_argument('headless')
+        chrome_options.add_argument('disable-gpu')
+        # 仮のウィンドウサイズのウェブドライバを作成して読み込む
+        chrome_options.add_argument('window-size=%d,%d' % (self.initial_width,self.initial_height))
+        tmp_driver = webdriver.Chrome(executable_path=executable_path, chrome_options=chrome_options)
+        tmp_driver.get(url)
+        # コンテンツサイズを取得して仮のウェブドライバを終了
+        self.real_height = tmp_driver.execute_script("return document.body.scrollHeight")
+        self.real_width = tmp_driver.execute_script("return document.body.scrollWidth")
+        tmp_driver.quit()
+        # コンテンツサイズに合わせたウェブドライバを作成して読み込む
+        chrome_options.add_argument('window-size=%d,%d' % (self.real_width,self.real_height))
+        self.driver = webdriver.Chrome(executable_path=executable_path, chrome_options=chrome_options)
+        self.driver.get(url)
 
     def __capture(self, element, filepath):
         size = element.size
@@ -97,11 +108,7 @@ class Browser:
                     result = result + self.__traverse(xpath1)
         return result
 
-    def load(self, url, xpath=None, mode=None, page_image_file=None, node_image_file=None):
-        # ページ読み込み
-        self.driver.implicitly_wait(10)
-        self.driver.get(url)
-        self.url = url
+    def load(self, xpath=None, mode=None, page_image_file=None, node_image_file=None):
         self.xpath = xpath or '//body'
         self.mode = mode and int(mode)
         # 全体をキャプチャ
@@ -125,13 +132,13 @@ class Browser:
         }
         # 画面表示
         if self.mode == self.MODE_NODELIST:
-            self.load_nodelist(url, self.xpath)
+            self.load_nodelist(self.url, self.xpath)
         elif self.mode == self.MODE_LINKLIST:
-            self.load_linklist(url, self.xpath)
+            self.load_linklist(self.url, self.xpath)
         elif self.mode == self.MODE_CAPTURE:
-            self.load_capture(url, self.xpath)
+            self.load_capture(self.url, self.xpath)
         elif self.mode == self.MODE_TEXT:
-            self.load_text(url, self.xpath)
+            self.load_text(self.url, self.xpath)
         # ウェブドライバを終了
         self.driver.quit()
         return info
@@ -142,8 +149,8 @@ class Browser:
         while len(result) == 1:
             result = self.__traverse(result[0]['xpath'])
         # 親ページ
-        label = self.driver.title or '(Untitled)'
-        item = xbmcgui.ListItem('[COLOR yellow]%s[/COLOR]' % label, iconImage=self.page_image_file, thumbnailImage=self.page_image_file)
+        label = self.driver.title.encode('utf-8') or '(Untitled)'
+        item = xbmcgui.ListItem('[COLOR yellow]\xe2\x97\x80\xe2\x97\x80 %s[/COLOR]' % label, iconImage=self.page_image_file, thumbnailImage=self.page_image_file)
         values = {'action':'showcapture', 'file':self.page_image_file}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, False)
@@ -152,7 +159,7 @@ class Browser:
         values = {'action':'append', 'label':self.driver.title.encode('utf-8'), 'url':self.url, 'xpath':xpath, 'mode':self.mode}
         query = 'Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
         menu.append((self.addon.getLocalizedString(32915), query))
-        label = '[COLOR yellow]\xe2\x96\xb6 %s[/COLOR]' % self.node_text.replace('\n',' ').encode('utf-8')
+        label = '[COLOR orange]\xe2\x97\x80 %s[/COLOR]' % self.node_text.replace('\n',' ').encode('utf-8')
         item = xbmcgui.ListItem(label, iconImage=self.node_image_file, thumbnailImage=self.node_image_file)
         item.addContextMenuItems(menu, replaceItems=True)
         values = {'action':'showcapture', 'file':self.node_image_file}
@@ -160,7 +167,7 @@ class Browser:
         xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, False)
         # 子ノードのリスト
     	for elem in result:
-            label = '[COLOR orange]\xe2\x96\xb6\xe2\x96\xb6 %s[/COLOR]' % elem['text'].encode('utf-8')
+            label = '[COLOR orange]%s[/COLOR]' % elem['text'].encode('utf-8')
             item = xbmcgui.ListItem(label, iconImage=elem['image'], thumbnailImage=elem['image'])
             item.addContextMenuItems(elem['menu'], replaceItems=True)
             values = {'action':'showcapture', 'file':elem['image']}
@@ -170,8 +177,8 @@ class Browser:
 
     def load_linklist(self, url, xpath):
         # メニュー生成
-        label = self.driver.title or '(Untitled)'
-        item = xbmcgui.ListItem('[COLOR yellow]%s[/COLOR]' % label, iconImage=self.page_image_file, thumbnailImage=self.page_image_file)
+        label = self.driver.title.encode('utf-8') or '(Untitled)'
+        item = xbmcgui.ListItem('[COLOR yellow]\xe2\x97\x80 %s[/COLOR]' % label, iconImage=self.page_image_file, thumbnailImage=self.page_image_file)
         values = {'action':'showcapture', 'file':self.page_image_file}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, False)

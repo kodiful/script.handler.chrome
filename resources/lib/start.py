@@ -117,12 +117,12 @@ class Start:
         # スタート画面を更新
         xbmc.executebuiltin('Container.Update(plugin://%s)' % addon.getAddonInfo('id'))
 
-    def show(self, executable_path=None):
+    def show(self):
         addon = xbmcaddon.Addon()
         # タイトル補完
         for data in self.data:
             if data['label'] == '':
-                info = Browser(executable_path).load(data['url'], data['xpath'])
+                info = Browser(url=data['url']).load(xpath=data['xpath'])
                 data['label'] = info['title'] or '(Untitled)'
         self.write()
         # 表示
