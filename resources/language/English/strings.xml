@@ -21,6 +21,7 @@
   <string id="32901">Link list</string>
   <string id="32902">Node list</string>
   <string id="32903">Capture</string>
+  <string id="32904">Text</string>
 
   <string id="32911">Edit item</string>
   <string id="32912">Delete page</string>
@@ -28,6 +29,6 @@
   <string id="32914">Show children</string>
   <string id="32915">Add to top</string>
 
-  <string id="32921">(Page)</string>
-  <string id="32922">(Node)</string>
+  <string id="32921">Page</string>
+  <string id="32922">Node</string>
 </strings>

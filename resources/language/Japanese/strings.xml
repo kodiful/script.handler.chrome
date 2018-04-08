@@ -21,13 +21,14 @@
   <string id="32901">リンクリスト</string>
   <string id="32902">ノードリスト</string>
   <string id="32903">キャプチャ</string>
+  <string id="32904">テキスト</string>
 
-  <string id="32911">項目を編集する</string>
+  <string id="32911">項目を設定する</string>
   <string id="32912">項目を削除する</string>
   <string id="32913">アドオン設定</string>
   <string id="32914">子ノードを表示する</string>
   <string id="32915">トップに追加する</string>
 
-  <string id="32921">（ページ）</string>
-  <string id="32922">（ノード）</string>
+  <string id="32921">ページ</string>
+  <string id="32922">ノード</string>
 </strings>

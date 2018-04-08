@@ -145,4 +145,4 @@ class Start:
             values = {'action':'traverse', 'url':url, 'xpath':xpath, 'mode':mode}
             query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
             xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, True)
-        xbmcplugin.endOfDirectory(int(sys.argv[1]), True)
+        xbmcplugin.endOfDirectory(int(sys.argv[1]))
