@@ -105,12 +105,22 @@ class Start:
                 data['mode'] = int(mode)
                 break
         else:
+            # 追加情報を取得
+            info = Browser(url=url).extract(xpath=xpath, optimize=True)
             # 設定を追加
             data = {}
-            data['label'] = label
             data['url'] = url
-            data['xpath'] = xpath
             data['mode'] = int(mode)
+            # ラベルを補完
+            if label:
+                data['label'] = label
+            else:
+                data['label'] = info['title'] or '(Untitled)'
+            # XPATHを最適化
+            if xpath == '//body':
+                data['xpath'] = xpath
+            else:
+                data['xpath'] = info['optimized_xpath'] or info['xpath']
             self.data.append(data)
         # ファイル書き込み
         self.write()
@@ -119,12 +129,6 @@ class Start:
 
     def show(self):
         addon = xbmcaddon.Addon()
-        # タイトル補完
-        for data in self.data:
-            if data['label'] == '':
-                info = Browser(url=data['url']).load(xpath=data['xpath'])
-                data['label'] = info['title'] or '(Untitled)'
-        self.write()
         # 表示
         for data in self.data:
             url = data['url']

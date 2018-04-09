@@ -45,7 +45,7 @@ if __name__  == '__main__':
             # スタート画面を表示
             Start().show()
         elif action == 'traverse':
-            Browser(url=url).load(xpath=xpath, mode=mode)
+            Browser(url=url).extract(xpath=xpath, mode=mode)
         elif action == 'showcapture':
             xbmc.executebuiltin('ShowPicture(%s)' % file)
         elif action == 'append':

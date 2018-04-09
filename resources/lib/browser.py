@@ -5,6 +5,7 @@ import xbmc, xbmcgui, xbmcplugin, xbmcaddon
 
 from datetime import datetime
 from cache import Cache
+from xpath import script
 from common import log, notify
 
 from PIL import Image
@@ -30,16 +31,16 @@ class Browser:
         from selenium.webdriver.chrome.options import Options
         # URLを格納
         self.url = url
-        # キャッシュディレクトリを作成
-        self.cache = Cache()
         # セッションIDとして時刻を格納
         self.session = datetime.now().strftime('%s')
+        # キャッシュディレクトリを作成
+        self.cache = Cache()
         # ウェブドライバを設定
         executable_path = self.addon.getSetting('chrome')
         chrome_options = Options()
         chrome_options.add_argument('headless')
         chrome_options.add_argument('disable-gpu')
-        # 仮のウィンドウサイズのウェブドライバを作成して読み込む
+        # 仮のウェブドライバを作成して読み込む
         chrome_options.add_argument('window-size=%d,%d' % (self.initial_width,self.initial_height))
         tmp_driver = webdriver.Chrome(executable_path=executable_path, chrome_options=chrome_options)
         tmp_driver.get(url)
@@ -108,7 +109,7 @@ class Browser:
                     result = result + self.__traverse(xpath1)
         return result
 
-    def load(self, xpath=None, mode=None, page_image_file=None, node_image_file=None):
+    def extract(self, xpath=None, mode=None, page_image_file=None, node_image_file=None, optimize=False):
         self.xpath = xpath or '//body'
         self.mode = mode and int(mode)
         # 全体をキャプチャ
@@ -121,6 +122,11 @@ class Browser:
         self.node_image_file = node_image_file or os.path.join(self.cache.path, '%s_%s.png' % (self.session,hashlib.md5(self.xpath).hexdigest()))
         self.__capture(self.elem, self.node_image_file)
         self.node_text = self.elem.text
+        # XPATHを最適化
+        if optimize:
+            optimized_xpath = self.driver.execute_script(script, self.elem)
+        else:
+            optimized_xpath = ''
         # 返り値
         info = {
             'url': self.url,
@@ -128,22 +134,23 @@ class Browser:
             'title': self.driver.title,
             'page_image_file': self.page_image_file,
             'node_image_file': self.node_image_file,
-            'node_text': self.node_text
+            'node_text': self.node_text,
+            'optimized_xpath': optimized_xpath
         }
         # 画面表示
         if self.mode == self.MODE_NODELIST:
-            self.load_nodelist(self.url, self.xpath)
+            self.__extract_nodelist(self.url, self.xpath)
         elif self.mode == self.MODE_LINKLIST:
-            self.load_linklist(self.url, self.xpath)
+            self.__extract_linklist(self.url, self.xpath)
         elif self.mode == self.MODE_CAPTURE:
-            self.load_capture(self.url, self.xpath)
+            self.__extract_capture(self.url, self.xpath)
         elif self.mode == self.MODE_TEXT:
-            self.load_text(self.url, self.xpath)
+            self.__extract_text(self.url, self.xpath)
         # ウェブドライバを終了
         self.driver.quit()
         return info
 
-    def load_nodelist(self, url, xpath):
+    def __extract_nodelist(self, url, xpath):
         # テキストを含むノードを抽出
         result = self.__traverse(xpath)
         while len(result) == 1:
@@ -175,7 +182,7 @@ class Browser:
             xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, False)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
-    def load_linklist(self, url, xpath):
+    def __extract_linklist(self, url, xpath):
         # メニュー生成
         label = self.driver.title.encode('utf-8') or '(Untitled)'
         item = xbmcgui.ListItem('[COLOR yellow]\xe2\x97\x80 %s[/COLOR]' % label, iconImage=self.page_image_file, thumbnailImage=self.page_image_file)
@@ -194,11 +201,11 @@ class Browser:
                 xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, True)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
-    def load_capture(self, url, xpath):
+    def __extract_capture(self, url, xpath):
         # キャプチャ画像を表示
         xbmc.executebuiltin('ShowPicture(%s)' % self.node_image_file)
 
-    def load_text(self, url, xpath):
+    def __extract_text(self, url, xpath):
         # テキストビューア
         viewer_id = 10147
         # ウィンドウを開く
