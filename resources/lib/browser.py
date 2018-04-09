@@ -60,8 +60,8 @@ class Browser:
         height = size['height']
         left = location['x']
         top = location['y']
-        right = left + width
-        bottom = top + height
+        right = min(left + width, self.real_width)
+        bottom = min(top + height, self.real_height)
         image = self.image.crop((int(left), int(top), int(right), int(bottom)))
         image.save(filepath)
 

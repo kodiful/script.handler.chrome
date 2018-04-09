@@ -112,15 +112,9 @@ class Start:
             data['url'] = url
             data['mode'] = int(mode)
             # ラベルを補完
-            if label:
-                data['label'] = label
-            else:
-                data['label'] = info['title'] or '(Untitled)'
+            data['label'] = label or info['title'] or '(Untitled)'
             # XPATHを最適化
-            if xpath == '//body':
-                data['xpath'] = xpath
-            else:
-                data['xpath'] = info['optimized_xpath'] or info['xpath']
+            data['xpath'] = info['optimized_xpath'] or info['xpath']
             self.data.append(data)
         # ファイル書き込み
         self.write()
