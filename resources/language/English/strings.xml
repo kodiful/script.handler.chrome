@@ -11,12 +11,13 @@
   <string id="32202">Label</string>
   <string id="32203">XPATH</string>
   <string id="32204">Mode</string>
-  <string id="32205">[COLOR green]Append[/COLOR]</string>
-  <string id="32206">[COLOR green]Update[/COLOR]</string>
+  <string id="32206">[COLOR green]Append[/COLOR]</string>
+  <string id="32207">[COLOR green]Update[/COLOR]</string>
 
   <string id="32300">Others</string>
   <string id="32301">Path to chromedriver</string>
-  <string id="32302">Debug</string>
+  <string id="32302">Screen size</string>
+  <string id="32303">Debug</string>
 
   <string id="32901">Link list</string>
   <string id="32902">Node list</string>
@@ -27,7 +28,8 @@
   <string id="32912">Delete page</string>
   <string id="32913">Addon settings</string>
   <string id="32914">Show node list</string>
-  <string id="32915">Add to top</string>
+  <string id="32915">Show link list</string>
+  <string id="32916">Add to top</string>
 
   <string id="32921">Show link list</string>
   <string id="32922">Show node list</string>

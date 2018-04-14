@@ -11,12 +11,13 @@
   <string id="32202">ラベル</string>
   <string id="32203">XPATH</string>
   <string id="32204">表示モード</string>
-  <string id="32205">[COLOR green]追加する[/COLOR]</string>
-  <string id="32206">[COLOR green]更新する[/COLOR]</string>
+  <string id="32206">[COLOR green]追加する[/COLOR]</string>
+  <string id="32207">[COLOR green]更新する[/COLOR]</string>
 
   <string id="32300">その他</string>
   <string id="32301">chromedriverのパス</string>
-  <string id="32302">デバッグ</string>
+  <string id="32302">スクリーンサイズ</string>
+  <string id="32303">デバッグ</string>
 
   <string id="32901">リンクリスト</string>
   <string id="32902">ノードリスト</string>
@@ -27,7 +28,8 @@
   <string id="32912">項目を削除する</string>
   <string id="32913">アドオン設定</string>
   <string id="32914">ノードリストを表示する</string>
-  <string id="32915">トップに追加する</string>
+  <string id="32915">リンクリストを表示する</string>
+  <string id="32916">トップに追加する</string>
 
   <string id="32921">リンクリストを表示する</string>
   <string id="32922">ノードリストを表示する</string>

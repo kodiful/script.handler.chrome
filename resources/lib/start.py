@@ -106,7 +106,7 @@ class Start:
                 break
         else:
             # 追加情報を取得
-            info = Browser(url=url).extract(xpath=xpath, optimize=True)
+            info = Browser(url).extract(url, xpath)
             # 設定を追加
             data = {}
             data['url'] = url
@@ -114,7 +114,7 @@ class Start:
             # ラベルを補完
             data['label'] = label or info['title'] or '(Untitled)'
             # XPATHを最適化
-            data['xpath'] = info['optimized_xpath'] or info['xpath']
+            data['xpath'] = info['optimized_xpath']
             self.data.append(data)
         # ファイル書き込み
         self.write()
@@ -153,7 +153,11 @@ class Start:
             # アイテム追加
             item = xbmcgui.ListItem(label or url)
             item.addContextMenuItems(menu, replaceItems=True)
-            values = {'action':'traverse', 'url':url, 'xpath':xpath, 'mode':mode}
+            values = {'action':'traverse', 'url':url, 'xpath':xpath, 'mode':mode, 'renew':True}
             query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
-            xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, True)
+            if mode in (Browser.MODE_NODELIST, Browser.MODE_LINKLIST):
+                isfolder = True
+            else:
+                isfolder = False
+            xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, isfolder)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))

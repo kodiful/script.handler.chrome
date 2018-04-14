@@ -6,7 +6,6 @@ import urlparse, urllib
 import sys
 
 from resources.lib.browser import Browser
-from resources.lib.cache import Cache
 from resources.lib.start import Start
 from resources.lib.common import log, notify
 
@@ -35,17 +34,19 @@ if __name__  == '__main__':
         url = args.get('url', [''])[0]
         xpath = args.get('xpath', [''])[0]
         mode = args.get('mode', [''])[0]
+        renew = args.get('renew', ['False'])[0]
         file = args.get('file', [''])[0]
         # アドオン設定
         settings = Settings(('url1','xpath1','url','label','xpath','mode')).clear()
         # actionに応じて処理
         if action is None:
-            # キャッシュをクリア
-            Cache().clear()
             # スタート画面を表示
             Start().show()
         elif action == 'traverse':
-            Browser(url=url).extract(xpath=xpath, mode=mode)
+            if renew:
+                Browser(url).extract(url, xpath, mode)
+            else:
+                Browser().extract(url, xpath, mode)
         elif action == 'showcapture':
             xbmc.executebuiltin('ShowPicture(%s)' % file)
         elif action == 'append':

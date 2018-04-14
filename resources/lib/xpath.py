@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-script = """
+getPartialXPath = """
 function getFullXPath(node, option) {
   try {
     var d = node.ownerDocument;
@@ -249,8 +249,9 @@ function getFullXPath(node, option) {
     }
     return xpath;
   } catch(e) {
-    alert(e);
+    //alert(e);
   }
+  return ''
 }
 
 function getPartialXPath(elem, option) {
@@ -324,18 +325,33 @@ function getPartialXPath(elem, option) {
     }
     return xpath;
   } catch(e) {
-    alert(e);
+    //alert(e);
   }
+  return '';
 }
 
 return getPartialXPath(arguments[0], arguments[1]);
 """
 
+extractNodes = """
+function extractNodes(xpath) {
+  var iterator = document.evaluate(xpath, document, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+  for(var n=iterator.iterateNext(), result=[]; n; n=iterator.iterateNext()) {
+    result.push(n);
+  }
+  return result;
+}
+
+return extractNodes(arguments[0])
+"""
+
 # テスト用
 if __name__  == '__main__':
     from selenium import webdriver
+    from datetime import datetime
     driver = webdriver.Chrome()
     driver.get('http://www.goo.ne.jp/')
-    elem = driver.find_element_by_xpath('//body')
-    print driver.execute_script(script, elem)
+    elems = driver.find_elements_by_xpath('//div')
+    #print driver.execute_script(getPartialXPath, elem)
+    elems = driver.execute_script(extractNodes, '//div')
     driver.quit()
