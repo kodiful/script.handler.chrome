@@ -155,9 +155,5 @@ class Start:
             item.addContextMenuItems(menu, replaceItems=True)
             values = {'action':'traverse', 'url':url, 'xpath':xpath, 'mode':mode, 'renew':True}
             query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
-            if mode in (Browser.MODE_NODELIST, Browser.MODE_LINKLIST):
-                isfolder = True
-            else:
-                isfolder = False
-            xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, isfolder)
+            xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, mode in (Browser.MODE_NODELIST, Browser.MODE_LINKLIST))
         xbmcplugin.endOfDirectory(int(sys.argv[1]))

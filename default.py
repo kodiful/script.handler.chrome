@@ -47,8 +47,6 @@ if __name__  == '__main__':
                 Browser(url).extract(url, xpath, mode)
             else:
                 Browser().extract(url, xpath, mode)
-        elif action == 'showcapture':
-            xbmc.executebuiltin('ShowPicture(%s)' % file)
         elif action == 'append':
             Start().append(label, url, xpath, mode)
         elif action == 'edit':
@@ -57,5 +55,7 @@ if __name__  == '__main__':
             Start().edited(settings)
         elif action == 'delete':
             Start().delete(url, xpath)
+        elif action == 'showcapture':
+            xbmc.executebuiltin('ShowPicture(%s)' % file)
     else:
         addon.openSettings()

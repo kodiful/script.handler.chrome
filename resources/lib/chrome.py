@@ -110,26 +110,27 @@ class Chrome:
         options.add_argument('user-agent=%s' % self.ua['user_agent'])
         # セッション情報
         self.session = Session()
-        # 既存のウェブドライバ
+        # ウェブドライバを生成
         self.driver = self.session.restore(options)
         if url:
-            if self.driver:
-                self.driver.close()
-            self.driver = self.__new(options)
+            # ページ遷移する場合は既存のウェブドライバを破棄して新規作成
+            if self.driver: self.__close()
+            self.__new(options)
+            # ページを開く
             self.__open(url)
         elif self.driver is None:
-            self.driver = self.__new(options)
+            # 既存のウェブドライバがない場合は新規作成
+            self.__new(options)
 
     def __new(self, options):
-        # ウェブドライバ生成
+        # ウェブドライバを作成
         executable_path = xbmcaddon.Addon().getSetting('chrome')
         self.driver = webdriver.Chrome(executable_path=executable_path, chrome_options=options)
         # セッション情報を保存
         self.session.save(self.driver)
         # セッションのメンテナンスを開始
-        args = (self.driver.command_executor._url, self.driver.session_id, self.driver)
-        threading.Thread(target=self.keeper, args=args).start()
-        return self.driver
+        args = (self.driver.command_executor._url, self.driver.session_id)
+        threading.Thread(target=self.watchdog, args=args).start()
 
     def __open(self, url):
         # ウィンドウサイズをリセット
@@ -141,11 +142,17 @@ class Chrome:
         height = self.driver.execute_script("return document.documentElement.scrollHeight")
         # ウィンドウサイズをアジャスト
         self.driver.set_window_size(width,height)
-        # 画面全体のイメージを取得
-        image = self.driver.get_screenshot_as_png()
-        self.image = Image.open(StringIO(image))
+
+    def __close(self):
+        # ウェブドライバを閉じる
+        self.driver.close()
+        # セッション情報をクリア
+        self.session.clear()
 
     def capture(self, image_file, element=None, xpath=None):
+        # 画面全体のイメージを取得
+        screenshot = self.driver.get_screenshot_as_png()
+        image = Image.open(StringIO(screenshot))
         # 指定部分を抽出
         if element:
             pass
@@ -162,19 +169,18 @@ class Chrome:
             right = min(location['x']+size['width'], window['width'])
             bottom = min(location['y']+size['height'], window['height'])
             if bottom > top and right > left:
-                image = self.image.crop((int(left), int(top), int(right), int(bottom)))
-                image.save(image_file)
+                image.crop((int(left), int(top), int(right), int(bottom))).save(image_file)
         else:
             # 画面全体
-            self.image.save(image_file)
+            image.save(image_file)
 
-    def keeper(self, executor_url, session_id, driver):
+    def watchdog(self, executor_url, session_id):
         monitor = xbmc.Monitor()
         while not monitor.abortRequested():
             # 停止を待機
             if monitor.waitForAbort(10): break
             # セッションをチェック
             data = Session().read()
-            if executor_url != data['executor_url'] or session_id != data['session_id']: break
+            if (executor_url,session_id) != (data['executor_url'],data['session_id']): break
         # ウェブドライバを終了
-        driver.quit()
+        self.driver.quit()
