@@ -19,20 +19,20 @@
   <string id="32302">スクリーンサイズ</string>
   <string id="32303">デバッグ</string>
 
-  <string id="32901">リンクリスト</string>
-  <string id="32902">ノードリスト</string>
-  <string id="32903">キャプチャ</string>
-  <string id="32904">テキスト</string>
+  <string id="32901">リンクを表示する</string>
+  <string id="32902">子ノードを表示する</string>
+  <string id="32903">キャプチャを表示する</string>
+  <string id="32904">テキストを表示する</string>
 
-  <string id="32911">項目を設定する</string>
-  <string id="32912">項目を削除する</string>
+  <string id="32911">この項目を設定する</string>
+  <string id="32912">この項目を削除する</string>
   <string id="32913">アドオン設定</string>
-  <string id="32914">ノードリストを表示する</string>
-  <string id="32915">リンクリストを表示する</string>
-  <string id="32916">トップに追加する</string>
+  <string id="32914">このノードの子ノードを表示する</string>
+  <string id="32915">このノードのリンクを表示する</string>
+  <string id="32916">このノードをトップに追加する</string>
 
-  <string id="32921">リンクリストを表示する</string>
-  <string id="32922">ノードリストを表示する</string>
-  <string id="32923">キャプチャを表示する</string>
-  <string id="32924">テキストを表示する</string>
+  <string id="32921">この項目のリンクを表示する</string>
+  <string id="32922">この項目の子ノードを表示する</string>
+  <string id="32923">この項目のキャプチャを表示する</string>
+  <string id="32924">この項目のテキストを表示する</string>
 </strings>

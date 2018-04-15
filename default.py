@@ -111,6 +111,8 @@ class Main:
                 data['label'] = label
                 data['xpath'] = xpath
                 data['mode'] = int(mode)
+                # 更新フラグを設定
+                data['flag'] = True
                 break
             elif url == data['url'] and xpath == data['xpath']:
                 # 重複する設定を更新
@@ -118,6 +120,8 @@ class Main:
                 data['label'] = label
                 data['xpath'] = xpath
                 data['mode'] = int(mode)
+                # 更新フラグを設定
+                data['flag'] = True
                 break
         else:
             # 追加情報を取得
@@ -130,6 +134,8 @@ class Main:
             data['label'] = label or info['title'] or '(Untitled)'
             # XPATHを最適化
             data['xpath'] = info['optimized_xpath']
+            # 更新フラグを設定
+            data['flag'] = True
             self.data.append(data)
         # ファイル書き込み
         self.write()
@@ -144,6 +150,12 @@ class Main:
             label = data['label']
             xpath = data['xpath']
             mode = data['mode']
+            # フラグ
+            flag = data.get('flag',False)
+            if flag:
+                data['flag'] = False
+                # ファイル書き込み
+                self.write()
             # コンテクストメニュー
             menu = []
             values = {'action':'traverse', 'url':url, 'xpath':xpath, 'mode':Browser.MODE_NODELIST}
@@ -153,10 +165,10 @@ class Main:
             query = 'Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             menu.append((addon.getLocalizedString(32921), query))
             values = {'action':'traverse', 'url':url, 'xpath':xpath, 'mode':Browser.MODE_CAPTURE}
-            query = 'Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
+            query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             menu.append((addon.getLocalizedString(32923), query))
             values = {'action':'traverse', 'url':url, 'xpath':xpath, 'mode':Browser.MODE_TEXT}
-            query = 'Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
+            query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             menu.append((addon.getLocalizedString(32924), query))
             values = {'action':'edit', 'label':label.encode('utf-8'), 'url':url, 'xpath':xpath, 'mode':mode}
             query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
@@ -166,7 +178,10 @@ class Main:
             menu.append((addon.getLocalizedString(32912), query))
             menu.append((addon.getLocalizedString(32913), 'Addon.OpenSettings(%s)' % addon.getAddonInfo('id')))
             # アイテム追加
-            item = xbmcgui.ListItem(label or url)
+            if flag:
+                item = xbmcgui.ListItem('[COLOR yellow]%s[/COLOR]' % (label or url))
+            else:
+                item = xbmcgui.ListItem(label or url)
             item.addContextMenuItems(menu, replaceItems=True)
             values = {'action':'traverse', 'url':url, 'xpath':xpath, 'mode':mode, 'renew':True}
             query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))

@@ -30,21 +30,10 @@ class Cache:
 #-------------------------------------------------------------------------------
 class Builder:
 
-    def __init__(self, browser):
-        self.browser = browser
-        self.addon = browser.addon
-        self.chrome = browser.chrome
-        self.cache = browser.cache
-        self.driver = browser.driver
-        # 引数
-        self.url = self.browser.url
-        self.xpath = self.browser.xpath
-        self.mode = self.browser.mode
-
     def current_page(self):
         # アイテムを作成
         label = '[COLOR white]%s[/COLOR]' % self.driver.title.replace('\n',' ').encode('utf-8') or '(Untitled)'
-        page_image_file = self.browser.page_image_file
+        page_image_file = self.page_image_file
         item = xbmcgui.ListItem(label, iconImage=page_image_file, thumbnailImage=page_image_file)
         # コンテクストメニューを設定
         menu = []
@@ -56,8 +45,8 @@ class Builder:
 
     def current_node(self):
         # アイテムを作成
-        label = '[COLOR yellow]%s[/COLOR]' % self.browser.node_text.replace('\n',' ').encode('utf-8') or '(Untitled)'
-        node_image_file = self.browser.node_image_file
+        label = '[COLOR yellow]%s[/COLOR]' % self.node_text.replace('\n',' ').encode('utf-8') or '(Untitled)'
+        node_image_file = self.node_image_file
         item = xbmcgui.ListItem(label, iconImage=node_image_file, thumbnailImage=node_image_file)
         # コンテクストメニューを設定
         menu = []
@@ -96,6 +85,8 @@ class Builder:
 
     def nodelist(self, xpath):
         list = []
+        ua_height = self.chrome.ua['height']
+        ua_width = self.chrome.ua['width']
         elems = self.driver.find_elements_by_xpath('%s/*' % xpath)
         for i in range(0,len(elems)):
             # スペース、改行以外のテキストを含むノードについて
@@ -103,7 +94,7 @@ class Builder:
                 xpath1 = xpath + "/*[%d]" % (i+1)
                 width = elems[i].size['width']
                 height = elems[i].size['height']
-                if height > 0 and width > 0 and (height < self.chrome.block_size or width < self.chrome.block_size):
+                if height>0 and width>0 and height<ua_height and width<ua_width and (height<ua_height/2 or width<ua_width/2):
                     # 画像を取得
                     image_file = os.path.join(self.cache.dirpath, '%s_%s.png' % (self.driver.session_id,hashlib.md5(xpath1).hexdigest()))
                     if not os.path.isfile(image_file):
@@ -142,7 +133,7 @@ class Builder:
         return list
 
 #-------------------------------------------------------------------------------
-class Browser():
+class Browser(Builder):
 
     MODE_NODELIST = 0
     MODE_LINKLIST = 1
@@ -198,14 +189,13 @@ class Browser():
 
     def __extract_nodelist(self):
         # 親ページを表示する
-        Builder(self).current_page()
+        self.current_page()
         # 親ノードを表示する
-        Builder(self).current_node()
+        self.current_node()
         # 子ノードのリスト
-        list = Builder(self).nodelist(self.xpath)
+        list = self.nodelist(self.xpath)
         while len(list) == 1:
-            list = Builder(self).nodelist(list[0]['xpath'])
-        log(list)
+            list = self.nodelist(list[0][1])
     	for (label, query, image_file, context_menu) in list:
             item = xbmcgui.ListItem(label, iconImage=image_file, thumbnailImage=image_file)
             item.addContextMenuItems(context_menu, replaceItems=True)
@@ -214,11 +204,11 @@ class Browser():
 
     def __extract_linklist(self):
         # 親ページを表示する
-        Builder(self).current_page()
+        self.current_page()
         # 親ノードを表示する
-        Builder(self).current_node()
+        self.current_node()
         # リンクのリスト
-        list = Builder(self).linklist(self.elem)
+        list = self.linklist(self.elem)
         for (label, query) in list:
             item = xbmcgui.ListItem(label)
             xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, True)

@@ -102,7 +102,6 @@ class Chrome:
         # ユーザエージェント
         ua = xbmcaddon.Addon().getSetting('ua')
         self.ua = self.USER_AGENT[ua]
-        self.block_size = min(self.ua['width']/2, self.ua['height']/2)
         # オプション
         options = Options()
         options.add_argument('headless')
@@ -181,6 +180,6 @@ class Chrome:
             if monitor.waitForAbort(10): break
             # セッションをチェック
             data = Session().read()
-            if (executor_url,session_id) != (data['executor_url'],data['session_id']): break
+            if data is None or (executor_url,session_id) != (data['executor_url'],data['session_id']): break
         # ウェブドライバを終了
         self.driver.quit()
