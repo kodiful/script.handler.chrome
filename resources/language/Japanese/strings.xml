@@ -29,7 +29,9 @@
   <string id="32913">アドオン設定</string>
   <string id="32914">このノードの子ノードを表示する</string>
   <string id="32915">このノードのリンクを表示する</string>
-  <string id="32916">このノードをトップに追加する</string>
+  <string id="32916">このノードのキャプチャを表示する</string>
+  <string id="32917">このノードのテキストを表示する</string>
+  <string id="32918">このノードをトップに追加する</string>
 
   <string id="32921">この項目のリンクを表示する</string>
   <string id="32922">この項目の子ノードを表示する</string>

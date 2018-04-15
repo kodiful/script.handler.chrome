@@ -8,6 +8,7 @@ from datetime import datetime
 from chrome import Chrome
 from xpath import getPartialXPath, extractNodes
 from common import log, notify
+from utils import show_image, show_text
 
 from PIL import Image
 from StringIO import StringIO
@@ -39,46 +40,66 @@ class Builder:
         menu = []
         item.addContextMenuItems(menu, replaceItems=True)
         # アイテムを追加
-        values = {'action':'showcapture', 'file':page_image_file}
+        values = {'action':'showimage', 'file':page_image_file}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, False)
 
     def current_node(self):
         # アイテムを作成
-        label = '[COLOR yellow]%s[/COLOR]' % self.node_text.replace('\n',' ').encode('utf-8') or '(Untitled)'
+        label = '[COLOR yellow]%s[/COLOR]' % self.elem.text.replace('\n',' ').encode('utf-8') or '(Untitled)'
         node_image_file = self.node_image_file
         item = xbmcgui.ListItem(label, iconImage=node_image_file, thumbnailImage=node_image_file)
         # コンテクストメニューを設定
         menu = []
         #### ノードリストを表示する
-        (label, query) = self.show_node_list(self.xpath)
+        (label, query) = self.show_childnodes(self.xpath)
         menu.append((label, 'Container.Update(%s)' % query))
         #### リンクリストを表示する
-        (label, query) = self.show_link_list(self.xpath)
+        (label, query) = self.show_links(self.xpath)
         menu.append((label, 'Container.Update(%s)' % query))
+        #### キャプチャを表示する
+        (label, query) = self.show_image(self.xpath)
+        menu.append((label, 'RunPlugin(%s)' % query))
+        #### テキストを表示する
+        (label, query) = self.show_text(self.xpath)
+        menu.append((label, 'RunPlugin(%s)' % query))
         #### トップに追加する
         (label, query) = self.add_to_top(self.xpath)
         menu.append((label, 'Container.Update(%s)' % query))
         item.addContextMenuItems(menu, replaceItems=True)
         # アイテムを追加
-        values = {'action':'showcapture', 'file':node_image_file}
+        values = {'action':'showimage', 'file':node_image_file}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, False)
 
-    def show_node_list(self, xpath):
+    def show_childnodes(self, xpath):
         label = self.addon.getLocalizedString(32914)
         values = {'action':'traverse', 'url':self.url, 'xpath':xpath, 'mode':Browser.MODE_NODELIST}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         return (label, query)
 
-    def show_link_list(self, xpath):
+    def show_links(self, xpath):
         label = self.addon.getLocalizedString(32915)
         values = {'action':'traverse', 'url':self.url, 'xpath':xpath, 'mode':Browser.MODE_LINKLIST}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         return (label, query)
 
-    def add_to_top(self, xpath):
+    def show_image(self, xpath):
         label = self.addon.getLocalizedString(32916)
+        #values = {'action':'traverse', 'url':self.url, 'xpath':xpath, 'mode':Browser.MODE_CAPTURE}
+        values = {'action':'showimage', 'file':self.node_image_file}
+        query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
+        return (label, query)
+
+    def show_text(self, xpath):
+        label = self.addon.getLocalizedString(32917)
+        #values = {'action':'traverse', 'url':self.url, 'xpath':xpath, 'mode':Browser.MODE_TEXT}
+        values = {'action':'showtext', 'file':self.node_text_file, 'title':self.driver.title or '(Untitled)'}
+        query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
+        return (label, query)
+
+    def add_to_top(self, xpath):
+        label = self.addon.getLocalizedString(32918)
         values = {'action':'append', 'label':self.driver.title.encode('utf-8'), 'url':self.url, 'xpath':xpath, 'mode':self.mode}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         return (label, query)
@@ -95,18 +116,28 @@ class Builder:
                 width = elems[i].size['width']
                 height = elems[i].size['height']
                 if height>0 and width>0 and height<ua_height and width<ua_width and (height<ua_height/2 or width<ua_width/2):
-                    # 画像を取得
+                    # キャプチャを取得
                     image_file = os.path.join(self.cache.dirpath, '%s_%s.png' % (self.driver.session_id,hashlib.md5(xpath1).hexdigest()))
                     if not os.path.isfile(image_file):
-                        self.chrome.capture(image_file, element=elems[i])
+                        self.chrome.save_image(image_file, element=elems[i])
+                    # テキストを取得
+                    text_file = os.path.join(self.cache.dirpath, '%s_%s.txt' % (self.driver.session_id,hashlib.md5(xpath1).hexdigest()))
+                    if not os.path.isfile(text_file):
+                        self.chrome.save_text(text_file, element=elems[i])
                     # コンテクストメニュー設定
                     context_menu = []
                     #### ノードリストを表示する
-                    (label, query) = self.show_node_list(xpath1)
+                    (label, query) = self.show_childnodes(xpath1)
                     context_menu.append((label, 'Container.Update(%s)' % query))
                     #### リンクリストを表示する
-                    (label, query) = self.show_link_list(xpath1)
+                    (label, query) = self.show_links(xpath1)
                     context_menu.append((label, 'Container.Update(%s)' % query))
+                    #### キャプチャを表示する
+                    (label, query) = self.show_image(xpath1)
+                    context_menu.append((label, 'RunPlugin(%s)' % query))
+                    #### テキストを表示する
+                    (label, query) = self.show_text(xpath1)
+                    context_menu.append((label, 'RunPlugin(%s)' % query))
                     #### トップに追加する
                     (label, query) = self.add_to_top(xpath1)
                     context_menu.append((label, 'Container.Update(%s)' % query))
@@ -115,9 +146,9 @@ class Builder:
                         context_menu.append((label, 'Container.Update(%s)' % query))
                     # データを格納
                     label = '[COLOR orange]%s[/COLOR]' % elems[i].text.replace('\n',' ')
-                    values = {'action':'showcapture', 'file':image_file}
+                    values = {'action':'showimage', 'file':image_file}
                     query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
-                    list.append((label, query, image_file, context_menu))
+                    list.append((label, query, image_file, text_file, context_menu))
                 else:
                     list = list + self.nodelist(xpath1)
         return list
@@ -158,22 +189,24 @@ class Browser(Builder):
         # 画面全体をキャプチャ
         self.page_image_file = os.path.join(self.cache.dirpath, '%s_%s.png' % (self.driver.session_id,hashlib.md5(self.url).hexdigest()))
         if not os.path.isfile(self.page_image_file):
-            self.chrome.capture(self.page_image_file)
+            self.chrome.save_image(self.page_image_file)
+        # 指定部分のエレメント
+        self.elem = self.driver.find_element_by_xpath(self.xpath)
         # 指定部分をキャプチャ
         self.node_image_file = os.path.join(self.cache.dirpath, '%s_%s.png' % (self.driver.session_id,hashlib.md5(self.xpath).hexdigest()))
         if not os.path.isfile(self.node_image_file):
-            self.chrome.capture(self.node_image_file, xpath=self.xpath)
-        # 指定部分のエレメント
-        self.elem = self.driver.find_element_by_xpath(self.xpath)
+            self.chrome.save_image(self.node_image_file, element=self.elem)
         # 指定部分のテキスト
-        self.node_text = self.elem.text
+        self.node_text_file = os.path.join(self.cache.dirpath, '%s_%s.txt' % (self.driver.session_id,hashlib.md5(self.xpath).hexdigest()))
+        if not os.path.isfile(self.node_text_file):
+            self.chrome.save_text(self.node_text_file, element=self.elem)
         # 画面表示
         if self.mode == self.MODE_NODELIST:
             self.__extract_nodelist()
         elif self.mode == self.MODE_LINKLIST:
             self.__extract_linklist()
         elif self.mode == self.MODE_CAPTURE:
-            self.__extract_capture()
+            self.__extract_image()
         elif self.mode == self.MODE_TEXT:
             self.__extract_text()
         # ノード情報を返す
@@ -184,7 +217,7 @@ class Browser(Builder):
             'title': self.driver.title,
             'page_image_file': self.page_image_file,
             'node_image_file': self.node_image_file,
-            'node_text': self.node_text
+            'node_text_file': self.node_text_file
         }
 
     def __extract_nodelist(self):
@@ -196,7 +229,7 @@ class Browser(Builder):
         list = self.nodelist(self.xpath)
         while len(list) == 1:
             list = self.nodelist(list[0][1])
-    	for (label, query, image_file, context_menu) in list:
+    	for (label, query, image_file, text_file, context_menu) in list:
             item = xbmcgui.ListItem(label, iconImage=image_file, thumbnailImage=image_file)
             item.addContextMenuItems(context_menu, replaceItems=True)
             xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, True)
@@ -214,7 +247,7 @@ class Browser(Builder):
             xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, True)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
-    def __extract_capture(self):
+    def __extract_image(self):
         # キャプチャ画像を表示
         xbmc.executebuiltin('ShowPicture(%s)' % self.node_image_file)
 
@@ -228,4 +261,4 @@ class Browser(Builder):
         # ウィンドウへ書き込む
         viewer = xbmcgui.Window(viewer_id)
         viewer.getControl(1).setLabel(self.driver.title or '(Untitled)')
-        viewer.getControl(5).setText(self.node_text)
+        viewer.getControl(5).setText(Cache().read(self.node_text_file))

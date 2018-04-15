@@ -9,7 +9,7 @@ import xbmc, xbmcgui, xbmcplugin, xbmcaddon
 from PIL import Image
 from StringIO import StringIO
 
-from resources.lib.common import log, notify
+from common import log, notify
 
 addon = xbmcaddon.Addon()
 sys.path.append(os.path.join(xbmc.translatePath(addon.getAddonInfo('path')), 'resources', 'lib', 'selenium-3.9.0'))
@@ -148,7 +148,7 @@ class Chrome:
         # セッション情報をクリア
         self.session.clear()
 
-    def capture(self, image_file, element=None, xpath=None):
+    def save_image(self, image_file, element=None, xpath=None):
         # 画面全体のイメージを取得
         screenshot = self.driver.get_screenshot_as_png()
         image = Image.open(StringIO(screenshot))
@@ -172,6 +172,18 @@ class Chrome:
         else:
             # 画面全体
             image.save(image_file)
+
+    def save_text(self, text_file, element=None, xpath=None):
+        # 指定部分を抽出
+        if element:
+            pass
+        elif xpath:
+            element = self.driver.find_element_by_xpath(xpath)
+        # キャプチャ
+        if element:
+            f = open(text_file,'w')
+            f.write(element.text.encode('utf-8'))
+            f.close()
 
     def watchdog(self, executor_url, session_id):
         monitor = xbmc.Monitor()

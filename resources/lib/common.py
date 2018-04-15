@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import inspect
+import inspect, os
 import xbmc, xbmcaddon
 
 def notify(message, **options):

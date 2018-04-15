@@ -27,9 +27,11 @@
   <string id="32911">Edit item</string>
   <string id="32912">Delete page</string>
   <string id="32913">Addon settings</string>
-  <string id="32914">Show childnode list</string>
-  <string id="32915">Show link list</string>
-  <string id="32916">Add to top</string>
+  <string id="32914">Show childnodes</string>
+  <string id="32915">Show links</string>
+  <string id="32916">Show capture</string>
+  <string id="32917">Show text</string>
+  <string id="32918">Add to top</string>
 
   <string id="32921">Show link list</string>
   <string id="32922">Show childnode list</string>

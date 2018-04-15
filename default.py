@@ -6,7 +6,9 @@ import urlparse, urllib
 import sys, os, json
 
 from resources.lib.browser import Browser
+from resources.lib.cache import Cache
 from resources.lib.common import log, notify
+from resources.lib.utils import show_image, show_text
 
 #-------------------------------------------------------------------------------
 class Settings:
@@ -200,8 +202,9 @@ if __name__  == '__main__':
         url = args.get('url', [''])[0]
         xpath = args.get('xpath', [''])[0]
         mode = args.get('mode', [''])[0]
-        renew = args.get('renew', ['False'])[0]
+        renew = args.get('renew', [False])[0]
         file = args.get('file', [''])[0]
+        title = args.get('title', [''])[0]
         # アドオン設定
         settings = Settings(('url1','xpath1','url','label','xpath','mode')).clear()
         # actionに応じて処理
@@ -221,7 +224,9 @@ if __name__  == '__main__':
             Main().edited(settings)
         elif action == 'delete':
             Main().delete(url, xpath)
-        elif action == 'showcapture':
-            xbmc.executebuiltin('ShowPicture(%s)' % file)
+        elif action == 'showimage':
+            show_image(file)
+        elif action == 'showtext':
+            show_text(file, title)
     else:
         addon.openSettings()
