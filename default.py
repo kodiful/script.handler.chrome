@@ -6,7 +6,6 @@ import urlparse, urllib
 import sys, os, json
 
 from resources.lib.browser import Browser
-from resources.lib.cache import Cache
 from resources.lib.common import log, notify
 from resources.lib.utilities import show_image, show_text
 

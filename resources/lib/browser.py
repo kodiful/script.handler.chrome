@@ -14,21 +14,6 @@ from PIL import Image
 from StringIO import StringIO
 
 #-------------------------------------------------------------------------------
-class Cache:
-
-    def __init__(self):
-        # ディレクトリを作成
-        addon = xbmcaddon.Addon()
-        self.dirpath = os.path.join(xbmc.translatePath(addon.getAddonInfo('profile')), 'cache')
-        if not os.path.isdir(self.dirpath):
-            os.makedirs(self.dirpath)
-
-    def clear(self):
-        # ディレクトリをクリア
-        for filename in os.listdir(self.dirpath):
-            os.remove(os.path.join(self.dirpath, filename))
-
-#-------------------------------------------------------------------------------
 class Builder:
 
     def current_page(self):
@@ -119,11 +104,11 @@ class Builder:
                     # 処理対象とするxpath
                     xpath2 = xpath1
                     # キャプチャを取得
-                    image_file = os.path.join(self.cache.dirpath, '%s_%s.png' % (self.driver.session_id,hashlib.md5(xpath2).hexdigest()))
+                    image_file = os.path.join(self.cachedir, '%s_%s.png' % (self.driver.session_id,hashlib.md5(xpath2).hexdigest()))
                     if not os.path.isfile(image_file):
                         self.chrome.save_image(image_file, element=elems[i])
                     # テキストを取得
-                    text_file = os.path.join(self.cache.dirpath, '%s_%s.txt' % (self.driver.session_id,hashlib.md5(xpath2).hexdigest()))
+                    text_file = os.path.join(self.cachedir, '%s_%s.txt' % (self.driver.session_id,hashlib.md5(xpath2).hexdigest()))
                     if not os.path.isfile(text_file):
                         self.chrome.save_text(text_file, element=elems[i])
                     # コンテクストメニュー設定
@@ -181,8 +166,13 @@ class Browser(Builder):
         # アドオン
         self.addon = xbmcaddon.Addon()
         # キャッシュディレクトリを作成
-        self.cache = Cache()
-        if url: self.cache.clear()
+        self.cachedir = os.path.join(xbmc.translatePath(self.addon.getAddonInfo('profile')), 'cache')
+        if not os.path.isdir(self.cachedir):
+            os.makedirs(self.cachedir)
+        # 新しいページを開く場合はキャッシュディレクトリをクリア
+        if url:
+            for filename in os.listdir(self.cachedir):
+                os.remove(os.path.join(self.cachedir, filename))
         # ウェブドライバを設定
         self.chrome = Chrome(url)
         self.driver = self.chrome.driver
@@ -193,17 +183,17 @@ class Browser(Builder):
         self.mode = mode and int(mode)
         log([self.url,self.xpath,self.mode])
         # 画面全体をキャプチャ
-        self.page_image_file = os.path.join(self.cache.dirpath, '%s_%s.png' % (self.driver.session_id,hashlib.md5(self.url).hexdigest()))
+        self.page_image_file = os.path.join(self.cachedir, '%s.png' % (self.driver.session_id))
         if not os.path.isfile(self.page_image_file):
             self.chrome.save_image(self.page_image_file)
         # 指定部分のエレメント
         self.elem = self.driver.find_element_by_xpath(self.xpath)
         # 指定部分をキャプチャ
-        self.node_image_file = os.path.join(self.cache.dirpath, '%s_%s.png' % (self.driver.session_id,hashlib.md5(self.xpath).hexdigest()))
+        self.node_image_file = os.path.join(self.cachedir, '%s_%s.png' % (self.driver.session_id, hashlib.md5(self.xpath).hexdigest()))
         if not os.path.isfile(self.node_image_file):
             self.chrome.save_image(self.node_image_file, element=self.elem)
         # 指定部分のテキスト
-        self.node_text_file = os.path.join(self.cache.dirpath, '%s_%s.txt' % (self.driver.session_id,hashlib.md5(self.xpath).hexdigest()))
+        self.node_text_file = os.path.join(self.cachedir, '%s_%s.txt' % (self.driver.session_id, hashlib.md5(self.xpath).hexdigest()))
         if not os.path.isfile(self.node_text_file):
             self.chrome.save_text(self.node_text_file, element=self.elem)
         # 画面表示
