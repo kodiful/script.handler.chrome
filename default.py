@@ -127,7 +127,7 @@ class Main:
                 break
         else:
             # 追加情報を取得
-            info = Browser(url).extract(url, xpath)
+            info = Browser(url).extract(xpath)
             # 設定を追加
             data = {}
             data['url'] = url
@@ -160,16 +160,16 @@ class Main:
                 self.write()
             # コンテクストメニュー
             menu = []
-            values = {'action':'traverse', 'url':url, 'xpath':xpath, 'mode':Browser.MODE_NODELIST}
+            values = {'action':'extract', 'url':url, 'xpath':xpath, 'mode':Browser.MODE_NODELIST}
             query = 'Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             menu.append((addon.getLocalizedString(32922), query))
-            values = {'action':'traverse', 'url':url, 'xpath':xpath, 'mode':Browser.MODE_LINKLIST}
+            values = {'action':'extract', 'url':url, 'xpath':xpath, 'mode':Browser.MODE_LINKLIST}
             query = 'Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             menu.append((addon.getLocalizedString(32921), query))
-            values = {'action':'traverse', 'url':url, 'xpath':xpath, 'mode':Browser.MODE_CAPTURE}
+            values = {'action':'extract', 'url':url, 'xpath':xpath, 'mode':Browser.MODE_CAPTURE}
             query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             menu.append((addon.getLocalizedString(32923), query))
-            values = {'action':'traverse', 'url':url, 'xpath':xpath, 'mode':Browser.MODE_TEXT}
+            values = {'action':'extract', 'url':url, 'xpath':xpath, 'mode':Browser.MODE_TEXT}
             query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             menu.append((addon.getLocalizedString(32924), query))
             values = {'action':'edit', 'label':label.encode('utf-8'), 'url':url, 'xpath':xpath, 'mode':mode}
@@ -185,7 +185,7 @@ class Main:
             else:
                 item = xbmcgui.ListItem(label or url)
             item.addContextMenuItems(menu, replaceItems=True)
-            values = {'action':'traverse', 'url':url, 'xpath':xpath, 'mode':mode, 'renew':True}
+            values = {'action':'extract', 'url':url, 'xpath':xpath, 'mode':mode, 'renew':True}
             query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
             xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, mode in (Browser.MODE_NODELIST, Browser.MODE_LINKLIST))
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
@@ -206,17 +206,18 @@ if __name__  == '__main__':
         image_file = args.get('image_file', [''])[0]
         text_file = args.get('text_file', [''])[0]
         title = args.get('title', [''])[0]
+        output_file = args.get('output_file', [None])[0]
         # アドオン設定
         settings = Settings(('url1','xpath1','url','label','xpath','mode')).clear()
         # actionに応じて処理
         if action is None:
             # スタート画面を表示
             Main().show()
-        elif action == 'traverse':
+        elif action == 'extract':
             if renew:
-                Browser(url).extract(url, xpath, mode)
+                Browser(url).extract(xpath, mode)
             else:
-                Browser().extract(url, xpath, mode)
+                Browser().extract(xpath, mode)
         elif action == 'append':
             Main().append(label, url, xpath, mode)
         elif action == 'edit':
@@ -225,9 +226,14 @@ if __name__  == '__main__':
             Main().edited(settings)
         elif action == 'delete':
             Main().delete(url, xpath)
-        elif action == 'showimage':
+        # following actions requires isFoldert=False
+        elif action == 'show_image':
             show_image(image_file)
-        elif action == 'showtext':
+        elif action == 'show_text':
             show_text(text_file, title)
+        elif action == 'extract_image':
+            Browser(url).extract(xpath, mode=Browser.MODE_CAPTURE, output_file=output_file)
+        elif action == 'extract_text':
+            Browser(url).extract(xpath, mode=Browser.MODE_TEXT, output_file=output_file)
     else:
         addon.openSettings()

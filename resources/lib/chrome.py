@@ -48,10 +48,11 @@ class Session:
         f.write(json.dumps(data, sort_keys=True, ensure_ascii=False, indent=2).encode('utf-8'))
         f.close()
 
-    def save(self, driver):
+    def save(self, driver, url=None):
         # セッション情報を保存する
         self.driver = driver
-        data = {'executor_url':self.driver.command_executor._url, 'session_id':self.driver.session_id}
+        self.url = url
+        data = {'executor_url':self.driver.command_executor._url, 'session_id':self.driver.session_id, 'url':self.url}
         self.write(data)
 
     def restore(self, options):
@@ -62,6 +63,7 @@ class Session:
             try:
                 self.driver = webdriver.Remote(data['executor_url'], desired_capabilities=options.to_capabilities())
                 self.driver.session_id = data['session_id']
+                self.url = data['url']
             except:
                 self.clear()
         else:
@@ -72,6 +74,7 @@ class Session:
         if os.path.isfile(self.filepath):
             os.remove(self.filepath)
         self.driver = None
+        self.url = None
 
 #-------------------------------------------------------------------------------
 class Chrome:
@@ -142,6 +145,8 @@ class Chrome:
         height = self.driver.execute_script("return document.documentElement.scrollHeight")
         # ウィンドウサイズをアジャスト
         self.driver.set_window_size(width,height)
+        # セッション情報を保存
+        self.session.save(self.driver, url)
 
     def __close(self):
         # ウェブドライバを閉じる

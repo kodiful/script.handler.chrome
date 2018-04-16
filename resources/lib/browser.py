@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import sys, os, json, urllib, hashlib
+import shutil
 import traceback
 import xbmc, xbmcgui, xbmcplugin, xbmcaddon
 
-from datetime import datetime
 from chrome import Chrome
 from xpath import getPartialXPath, extractNodes
 from common import log, notify
@@ -40,7 +40,7 @@ class Builder:
         menu = []
         item.addContextMenuItems(menu, replaceItems=True)
         # アイテムを追加
-        values = {'action':'showimage', 'image_file':page_image_file}
+        values = {'action':'show_image', 'image_file':page_image_file}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, False)
 
@@ -68,33 +68,33 @@ class Builder:
         menu.append((label, 'Container.Update(%s)' % query))
         item.addContextMenuItems(menu, replaceItems=True)
         # アイテムを追加
-        values = {'action':'showimage', 'image_file':node_image_file}
+        values = {'action':'show_image', 'image_file':node_image_file}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, False)
 
     def show_childnodes(self, xpath):
         label = self.addon.getLocalizedString(32914)
-        values = {'action':'traverse', 'url':self.url, 'xpath':xpath, 'mode':Browser.MODE_NODELIST}
+        values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'mode':Browser.MODE_NODELIST}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         return (label, query)
 
     def show_links(self, xpath):
         label = self.addon.getLocalizedString(32915)
-        values = {'action':'traverse', 'url':self.url, 'xpath':xpath, 'mode':Browser.MODE_LINKLIST}
+        values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'mode':Browser.MODE_LINKLIST}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         return (label, query)
 
     def show_image(self, xpath):
         label = self.addon.getLocalizedString(32916)
-        #values = {'action':'traverse', 'url':self.url, 'xpath':xpath, 'mode':Browser.MODE_CAPTURE}
-        values = {'action':'showimage', 'image_file':self.node_image_file}
+        #values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'mode':Browser.MODE_CAPTURE}
+        values = {'action':'show_image', 'image_file':self.node_image_file}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         return (label, query)
 
     def show_text(self, xpath):
         label = self.addon.getLocalizedString(32917)
-        #values = {'action':'traverse', 'url':self.url, 'xpath':xpath, 'mode':Browser.MODE_TEXT}
-        values = {'action':'showtext', 'text_file':self.node_text_file, 'title':self.driver.title.encode('utf-8')}
+        #values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'mode':Browser.MODE_TEXT}
+        values = {'action':'show_text', 'text_file':self.node_text_file, 'title':self.driver.title.encode('utf-8')}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         return (label, query)
 
@@ -148,7 +148,7 @@ class Builder:
                         context_menu.append((label, 'Container.Update(%s)' % query))
                     # データを格納
                     label = '[COLOR orange]%s[/COLOR]' % elems[i].text.replace('\n',' ')
-                    values = {'action':'showimage', 'image_file':image_file}
+                    values = {'action':'show_image', 'image_file':image_file}
                     query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
                     list.append((label, query, image_file, text_file, context_menu))
                 else:
@@ -164,7 +164,7 @@ class Builder:
         for a in elem.find_elements_by_xpath(".//a[starts-with(@href,'http')]"):
             if a.text.replace(' ','').replace('\n',''):
                 label = '[COLOR blue]%s[/COLOR]' % a.text.replace('\n',' ')
-                values = {'action':'traverse', 'url':a.get_attribute('href'), 'mode':Browser.MODE_NODELIST, 'renew':True}
+                values = {'action':'extract', 'url':a.get_attribute('href'), 'mode':Browser.MODE_NODELIST, 'renew':True}
                 query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
                 list.append((label, query))
         return list
@@ -187,8 +187,8 @@ class Browser(Builder):
         self.chrome = Chrome(url)
         self.driver = self.chrome.driver
 
-    def extract(self, url=None, xpath=None, mode=None):
-        self.url = url
+    def extract(self, xpath=None, mode=None, output_file=None):
+        self.url = self.chrome.session.url
         self.xpath = xpath or '//html'
         self.mode = mode and int(mode)
         log([self.url,self.xpath,self.mode])
@@ -212,9 +212,9 @@ class Browser(Builder):
         elif self.mode == self.MODE_LINKLIST:
             self.__extract_linklist()
         elif self.mode == self.MODE_CAPTURE:
-            self.__extract_image()
+            self.__extract_image(output_file)
         elif self.mode == self.MODE_TEXT:
-            self.__extract_text()
+            self.__extract_text(output_file)
         # ノード情報を返す
         return {
             'url': self.url,
@@ -249,8 +249,14 @@ class Browser(Builder):
             xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, True)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
-    def __extract_image(self):
-        show_image(self.node_image_file)
+    def __extract_image(self, output_file=None):
+        if output_file:
+            shutil.copyfile(self.node_image_file, output_file)
+        else:
+            show_image(self.node_image_file)
 
-    def __extract_text(self):
-        show_text(self.node_text_file, self.driver.title.encode('utf-8'))
+    def __extract_text(self, output_file=None):
+        if output_file:
+            shutil.copyfile(self.node_text_file, output_file)
+        else:
+            show_text(self.node_text_file, self.driver.title.encode('utf-8'))
