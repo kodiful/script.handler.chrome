@@ -3,13 +3,13 @@
 import os
 import xbmc, xbmcgui, xbmcplugin, xbmcaddon
 
-def show_image(file):
-    xbmc.executebuiltin('ShowPicture(%s)' % file)
+def show_image(image_file):
+    xbmc.executebuiltin('ShowPicture(%s)' % image_file)
 
-def show_text(file, title=None):
+def show_text(text_file, title=None):
     # ファイル読み込み
-    if os.path.isfile(file):
-        f = open(file,'r')
+    if os.path.isfile(text_file):
+        f = open(text_file,'r')
         data = f.read().decode('utf-8')
         f.close()
     else:

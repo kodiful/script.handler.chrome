@@ -8,7 +8,7 @@ import sys, os, json
 from resources.lib.browser import Browser
 from resources.lib.cache import Cache
 from resources.lib.common import log, notify
-from resources.lib.utils import show_image, show_text
+from resources.lib.utilities import show_image, show_text
 
 #-------------------------------------------------------------------------------
 class Settings:
@@ -203,7 +203,8 @@ if __name__  == '__main__':
         xpath = args.get('xpath', [''])[0]
         mode = args.get('mode', [''])[0]
         renew = args.get('renew', [False])[0]
-        file = args.get('file', [''])[0]
+        image_file = args.get('image_file', [''])[0]
+        text_file = args.get('text_file', [''])[0]
         title = args.get('title', [''])[0]
         # アドオン設定
         settings = Settings(('url1','xpath1','url','label','xpath','mode')).clear()
@@ -225,8 +226,8 @@ if __name__  == '__main__':
         elif action == 'delete':
             Main().delete(url, xpath)
         elif action == 'showimage':
-            show_image(file)
+            show_image(image_file)
         elif action == 'showtext':
-            show_text(file, title)
+            show_text(text_file, title)
     else:
         addon.openSettings()

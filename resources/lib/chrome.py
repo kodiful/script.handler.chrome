@@ -21,13 +21,14 @@ class Session:
 
     def __init__(self):
         addon = xbmcaddon.Addon()
+        addon_id = addon.getAddonInfo('id')
+        addon_profile = addon.getAddonInfo('profile')
         # ディレクトリを作成
-        self.dirpath = os.path.join(xbmc.translatePath(addon.getAddonInfo('profile')), 'session')
+        self.dirpath = os.path.join(xbmc.translatePath(addon_profile), 'session')
         if not os.path.isdir(self.dirpath):
             os.makedirs(self.dirpath)
         # セッション情報を格納するファイルのパス
-        self.appid = addon.getAddonInfo('id')
-        self.filepath = os.path.join(self.dirpath, self.appid)
+        self.filepath = os.path.join(self.dirpath, addon_id)
 
     def read(self):
         if os.path.isfile(self.filepath):
@@ -192,6 +193,11 @@ class Chrome:
             if monitor.waitForAbort(10): break
             # セッションをチェック
             data = Session().read()
-            if data is None or (executor_url,session_id) != (data['executor_url'],data['session_id']): break
+            if data is None:
+                break
+            elif data['executor_url'] != executor_url:
+                break
+            elif data['session_id'] != session_id:
+                break
         # ウェブドライバを終了
         self.driver.quit()
