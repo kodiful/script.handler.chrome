@@ -23,6 +23,7 @@
   <string id="32902">子ノードを表示する</string>
   <string id="32903">キャプチャを表示する</string>
   <string id="32904">テキストを表示する</string>
+  <string id="32905">音声合成する</string>
 
   <string id="32911">この項目を設定する</string>
   <string id="32912">この項目を削除する</string>
@@ -31,10 +32,12 @@
   <string id="32915">このノードのリンクを表示する</string>
   <string id="32916">このノードのキャプチャを表示する</string>
   <string id="32917">このノードのテキストを表示する</string>
-  <string id="32918">このノードをトップに追加する</string>
+  <string id="32918">このノードのテキストを音声合成する</string>
+  <string id="32919">このノードをトップに追加する</string>
 
   <string id="32921">この項目のリンクを表示する</string>
   <string id="32922">この項目の子ノードを表示する</string>
   <string id="32923">この項目のキャプチャを表示する</string>
   <string id="32924">この項目のテキストを表示する</string>
+  <string id="32925">この項目のテキストを音声合成する</string>
 </strings>

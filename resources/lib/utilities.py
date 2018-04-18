@@ -10,7 +10,7 @@ def show_text(text_file, title=None):
     # ファイル読み込み
     if os.path.isfile(text_file):
         f = open(text_file,'r')
-        data = f.read().decode('utf-8')
+        data = f.read()
         f.close()
     else:
         data = ''

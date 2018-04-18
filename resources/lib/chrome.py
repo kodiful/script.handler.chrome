@@ -11,24 +11,24 @@ from StringIO import StringIO
 
 from common import log, notify
 
-addon = xbmcaddon.Addon()
-sys.path.append(os.path.join(xbmc.translatePath(addon.getAddonInfo('path')), 'resources', 'lib', 'selenium-3.9.0'))
+sys.path.append(os.path.join(xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('path')), 'resources', 'lib', 'selenium-3.9.0'))
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 #-------------------------------------------------------------------------------
 class Session:
 
-    def __init__(self):
-        addon = xbmcaddon.Addon()
-        addon_id = addon.getAddonInfo('id')
-        addon_profile = addon.getAddonInfo('profile')
+    def __init__(self, realm):
+        # アドオン
+        self.addon = xbmcaddon.Addon()
+        addon_id = self.addon.getAddonInfo('id')
+        addon_profile = self.addon.getAddonInfo('profile')
         # ディレクトリを作成
-        self.dirpath = os.path.join(xbmc.translatePath(addon_profile), 'session')
+        self.dirpath = os.path.join(xbmc.translatePath(addon_profile), realm or addon_id)
         if not os.path.isdir(self.dirpath):
             os.makedirs(self.dirpath)
         # セッション情報を格納するファイルのパス
-        self.filepath = os.path.join(self.dirpath, addon_id)
+        self.filepath = os.path.join(self.dirpath, 'session.json')
 
     def read(self):
         if os.path.isfile(self.filepath):
@@ -102,9 +102,11 @@ class Chrome:
         }
     }
 
-    def __init__(self, url=None):
+    def __init__(self, url=None, realm=None):
+        # アドオン
+        self.addon = xbmcaddon.Addon()
         # ユーザエージェント
-        ua = xbmcaddon.Addon().getSetting('ua')
+        ua = self.addon.getSetting('ua')
         self.ua = self.USER_AGENT[ua]
         # オプション
         options = Options()
@@ -112,27 +114,27 @@ class Chrome:
         options.add_argument('disable-gpu')
         options.add_argument('user-agent=%s' % self.ua['user_agent'])
         # セッション情報
-        self.session = Session()
+        self.session = Session(realm)
         # ウェブドライバを生成
         self.driver = self.session.restore(options)
         if url:
             # ページ遷移する場合は既存のウェブドライバを破棄して新規作成
             if self.driver: self.__close()
-            self.__new(options)
+            self.__new(options, realm)
             # ページを開く
             self.__open(url)
         elif self.driver is None:
             # 既存のウェブドライバがない場合は新規作成
-            self.__new(options)
+            self.__new(options, realm)
 
-    def __new(self, options):
+    def __new(self, options, realm):
         # ウェブドライバを作成
-        executable_path = xbmcaddon.Addon().getSetting('chrome')
+        executable_path = self.addon.getSetting('chrome')
         self.driver = webdriver.Chrome(executable_path=executable_path, chrome_options=options)
         # セッション情報を保存
         self.session.save(self.driver)
         # セッションのメンテナンスを開始
-        args = (self.driver.command_executor._url, self.driver.session_id)
+        args = (self.driver.command_executor._url, self.driver.session_id, realm)
         threading.Thread(target=self.watchdog, args=args).start()
 
     def __open(self, url):
@@ -191,13 +193,13 @@ class Chrome:
             f.write(element.text.encode('utf-8'))
             f.close()
 
-    def watchdog(self, executor_url, session_id):
+    def watchdog(self, executor_url, session_id, realm):
         monitor = xbmc.Monitor()
         while not monitor.abortRequested():
             # 停止を待機
             if monitor.waitForAbort(10): break
             # セッションをチェック
-            data = Session().read()
+            data = Session(realm).read()
             if data is None:
                 break
             elif data['executor_url'] != executor_url:

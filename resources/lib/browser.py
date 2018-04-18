@@ -48,6 +48,9 @@ class Builder:
         #### テキストを表示する
         (label, query) = self.show_text(self.xpath)
         menu.append((label, 'RunPlugin(%s)' % query))
+        #### テキストを音声合成する
+        (label, query) = self.play_wav(self.xpath)
+        menu.append((label, 'RunPlugin(%s)' % query))
         #### トップに追加する
         (label, query) = self.add_to_top(self.xpath)
         menu.append((label, 'Container.Update(%s)' % query))
@@ -59,33 +62,39 @@ class Builder:
 
     def show_childnodes(self, xpath):
         label = self.addon.getLocalizedString(32914)
-        values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'mode':Browser.MODE_NODELIST}
+        values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'target':Browser.TARGET_NODELIST}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         return (label, query)
 
     def show_links(self, xpath):
         label = self.addon.getLocalizedString(32915)
-        values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'mode':Browser.MODE_LINKLIST}
+        values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'target':Browser.TARGET_LINKLIST}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         return (label, query)
 
     def show_image(self, xpath):
         label = self.addon.getLocalizedString(32916)
-        #values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'mode':Browser.MODE_CAPTURE}
-        values = {'action':'show_image', 'image_file':self.node_image_file}
+        values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'target':Browser.TARGET_CAPTURE}
+        #values = {'action':'show_image', 'image_file':self.node_image_file}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         return (label, query)
 
     def show_text(self, xpath):
         label = self.addon.getLocalizedString(32917)
-        #values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'mode':Browser.MODE_TEXT}
-        values = {'action':'show_text', 'text_file':self.node_text_file, 'title':self.driver.title.encode('utf-8')}
+        values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'target':Browser.TARGET_TEXT}
+        #values = {'action':'show_text', 'text_file':self.node_text_file, 'title':self.driver.title.encode('utf-8')}
+        query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
+        return (label, query)
+
+    def play_wav(self, xpath):
+        label = self.addon.getLocalizedString(32918)
+        values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'target':Browser.TARGET_WAV}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         return (label, query)
 
     def add_to_top(self, xpath):
-        label = self.addon.getLocalizedString(32918)
-        values = {'action':'append', 'label':self.driver.title.encode('utf-8'), 'url':self.url, 'xpath':xpath, 'mode':self.mode}
+        label = self.addon.getLocalizedString(32919)
+        values = {'action':'append', 'label':self.driver.title.encode('utf-8'), 'url':self.url, 'xpath':xpath, 'target':self.target}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         return (label, query)
 
@@ -125,6 +134,10 @@ class Builder:
                     #### テキストを表示する
                     (label, query) = self.show_text(xpath2)
                     context_menu.append((label, 'RunPlugin(%s)' % query))
+                    #### テキストを音声合成する
+                    if self.addon.getSetting('tts'):
+                        (label, query) = self.play_wav(xpath2)
+                        context_menu.append((label, 'RunPlugin(%s)' % query))
                     #### トップに追加する
                     (label, query) = self.add_to_top(xpath2)
                     context_menu.append((label, 'Container.Update(%s)' % query))
@@ -149,7 +162,7 @@ class Builder:
         for a in elem.find_elements_by_xpath(".//a[starts-with(@href,'http')]"):
             if a.text.replace(' ','').replace('\n',''):
                 label = '[COLOR blue]%s[/COLOR]' % a.text.replace('\n',' ')
-                values = {'action':'extract', 'url':a.get_attribute('href'), 'mode':Browser.MODE_NODELIST, 'renew':True}
+                values = {'action':'extract', 'url':a.get_attribute('href'), 'target':Browser.TARGET_NODELIST, 'renew':True}
                 query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
                 list.append((label, query))
         return list
@@ -157,16 +170,20 @@ class Builder:
 #-------------------------------------------------------------------------------
 class Browser(Builder):
 
-    MODE_NODELIST = 0
-    MODE_LINKLIST = 1
-    MODE_CAPTURE = 2
-    MODE_TEXT = 3
+    TARGET_NODELIST = 0
+    TARGET_LINKLIST = 1
+    TARGET_CAPTURE = 2
+    TARGET_TEXT = 3
+    TARGET_WAV = 4
+    TARGET_FILES = 99
 
-    def __init__(self, url=None):
+    def __init__(self, url=None, realm=None):
         # アドオン
         self.addon = xbmcaddon.Addon()
+        addon_id = self.addon.getAddonInfo('id')
+        addon_profile = self.addon.getAddonInfo('profile')
         # キャッシュディレクトリを作成
-        self.cachedir = os.path.join(xbmc.translatePath(self.addon.getAddonInfo('profile')), 'cache')
+        self.cachedir = os.path.join(xbmc.translatePath(addon_profile), realm or addon_id, 'cache')
         if not os.path.isdir(self.cachedir):
             os.makedirs(self.cachedir)
         # 新しいページを開く場合はキャッシュディレクトリをクリア
@@ -174,14 +191,14 @@ class Browser(Builder):
             for filename in os.listdir(self.cachedir):
                 os.remove(os.path.join(self.cachedir, filename))
         # ウェブドライバを設定
-        self.chrome = Chrome(url)
+        self.chrome = Chrome(url, realm)
         self.driver = self.chrome.driver
 
-    def extract(self, xpath=None, mode=None, output_file=None):
+    def extract(self, xpath=None, target=None, image_file=None, text_file=None, wav_file=None):
         self.url = self.chrome.session.url
         self.xpath = xpath or '//html'
-        self.mode = mode and int(mode)
-        log([self.url,self.xpath,self.mode])
+        self.target = target and int(target)
+        log([self.url,self.xpath,self.target])
         # 画面全体をキャプチャ
         self.page_image_file = os.path.join(self.cachedir, '%s.png' % (self.driver.session_id))
         if not os.path.isfile(self.page_image_file):
@@ -196,15 +213,21 @@ class Browser(Builder):
         self.node_text_file = os.path.join(self.cachedir, '%s_%s.txt' % (self.driver.session_id, hashlib.md5(self.xpath).hexdigest()))
         if not os.path.isfile(self.node_text_file):
             self.chrome.save_text(self.node_text_file, element=self.elem)
+        # 指定部分のテキストを音声合成（ファイルパスのみ設定）
+        self.node_wav_file = os.path.join(self.cachedir, '%s_%s.wav' % (self.driver.session_id, hashlib.md5(self.xpath).hexdigest()))
         # 画面表示
-        if self.mode == self.MODE_NODELIST:
+        if self.target == self.TARGET_NODELIST:
             self.__extract_nodelist()
-        elif self.mode == self.MODE_LINKLIST:
+        elif self.target == self.TARGET_LINKLIST:
             self.__extract_linklist()
-        elif self.mode == self.MODE_CAPTURE:
-            self.__extract_image(output_file)
-        elif self.mode == self.MODE_TEXT:
-            self.__extract_text(output_file)
+        elif self.target == self.TARGET_CAPTURE:
+            self.__extract_image()
+        elif self.target == self.TARGET_TEXT:
+            self.__extract_text()
+        elif self.target == self.TARGET_WAV:
+            self.__extract_wav()
+        elif self.target == self.TARGET_FILES:
+            self.__extract_files(image_file, text_file, wav_file)
         # ノード情報を返す
         return {
             'url': self.url,
@@ -239,14 +262,39 @@ class Browser(Builder):
             xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, True)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
-    def __extract_image(self, output_file=None):
-        if output_file:
-            shutil.copyfile(self.node_image_file, output_file)
-        else:
-            show_image(self.node_image_file)
+    def __extract_image(self):
+        show_image(self.node_image_file)
 
-    def __extract_text(self, output_file=None):
-        if output_file:
-            shutil.copyfile(self.node_text_file, output_file)
-        else:
+    def __extract_text(self):
+        show_text(self.node_text_file, self.driver.title.encode('utf-8'))
+
+    def __extract_wav(self, play=True):
+        # 指定部分のテキストから音声合成
+        if not os.path.isfile(self.node_wav_file):
+            # ファイル読み込み
+            if os.path.isfile(self.node_text_file):
+                f = open(self.node_text_file,'r')
+                data = f.read()
+                f.close()
+            else:
+                data = ''
+            # 音声合成を実行
+            values = {'text':data.replace('\n',' '), 'silent':'true', 'wavfile':self.node_wav_file}
+            postdata = urllib.urlencode(values)
+            xbmc.executebuiltin('RunPlugin(plugin://script.handler.tts/?%s)' % (postdata))
+            # WAVFILEの生成を待機
+            while not os.path.exists(self.node_wav_file):
+                xbmc.sleep(1)
+        if play:
+            #show_image(self.node_image_file)
             show_text(self.node_text_file, self.driver.title.encode('utf-8'))
+            xbmc.executebuiltin('PlayMedia(%s)' % self.node_wav_file)
+
+    def __extract_files(self, image_file=None, text_file=None, wav_file=None):
+        if image_file and os.path.isfile(self.node_image_file):
+            shutil.copyfile(self.node_image_file, image_file)
+        if text_file and os.path.isfile(self.node_text_file):
+            shutil.copyfile(self.node_text_file, text_file)
+        if wav_file:
+            self.__extract_wav(play=False)
+            shutil.copyfile(self.node_wav_file, wav_file)

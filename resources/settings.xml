@@ -6,14 +6,16 @@
       strings 33000 thru 33999 reserved for common strings used in add-ons
   -->
   <category label="32200">
-    <setting label="32201" id="url" type="text" default="http://"/>
-    <setting label="32202" id="label" type="text" default="" visible="!eq(-1,)+!eq(3,)"/>
-    <setting label="32203" id="xpath" type="text" default="" visible="!eq(-2,)+!eq(2,)"/>
-    <setting label="32204" id="mode" type="enum" lvalues="32902|32901|32903|32904" default="0" visible="!eq(-3,)+!eq(1,)"/>
+    <setting id="tts" type="text" visible="false"/>
     <setting id="url1" type="text" visible="false"/>
     <setting id="xpath1" type="text" visible="false"/>
-    <setting label="32206" type="action" option="close" action="RunPlugin(plugin://$ID/?action=edited)" enable="!eq(-6,)" visible="eq(-2,)"/>
-    <setting label="32207" type="action" option="close" action="RunPlugin(plugin://$ID/?action=edited)" enable="!eq(-7,)+!eq(-6,)+!eq(-5,)" visible="!eq(-3,)"/>
+    <setting label="32201" id="url" type="text" default="http://"/>
+    <setting label="32202" id="label" type="text" default="http://" visible="!eq(-1,)+!eq(3,)"/>
+    <setting label="32203" id="xpath" type="text" default="//html" visible="!eq(-2,)+!eq(2,)"/>
+    <setting label="32204" id="target" type="enum" lvalues="32902|32901|32903|32904" default="0" visible="!eq(-3,)+!eq(-5,)+eq(-6,)"/>
+    <setting label="32204" id="target" type="enum" lvalues="32902|32901|32903|32904|32905" default="0" visible="!eq(-4,)+!eq(-6,)+!eq(-7,)"/>
+    <setting label="32206" type="action" option="close" action="RunPlugin(plugin://$ID/?action=edited)" enable="!eq(-5,)" visible="eq(-7,)"/>
+    <setting label="32207" type="action" option="close" action="RunPlugin(plugin://$ID/?action=edited)" enable="!eq(-6,)+!eq(-5,)+!eq(-4,)" visible="!eq(-8,)"/>
   </category>
   <category label="32300">
     <setting label="32301" id="chrome" type="file" default=""/>

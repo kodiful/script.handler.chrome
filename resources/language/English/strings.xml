@@ -23,6 +23,7 @@
   <string id="32902">ChildNode list</string>
   <string id="32903">Capture</string>
   <string id="32904">Text</string>
+  <string id="32905">Text to speech</string>
 
   <string id="32911">Edit item</string>
   <string id="32912">Delete page</string>
@@ -31,10 +32,12 @@
   <string id="32915">Show links</string>
   <string id="32916">Show capture</string>
   <string id="32917">Show text</string>
-  <string id="32918">Add to top</string>
+  <string id="32918">Text to speech</string>
+  <string id="32919">Add to top</string>
 
   <string id="32921">Show link list</string>
   <string id="32922">Show childnode list</string>
   <string id="32923">Show capture</string>
   <string id="32924">Show text</string>
+  <string id="32925">Text to speech</string>
 </strings>
