@@ -13,12 +13,12 @@ from resources.lib.utilities import show_image, show_text
 class Settings:
 
     DEFAULT = {
-        'url1':     '',
-        'xpath1':   '',
-        'url':      'http://',
-        'label':    '',
-        'xpath':    '//html',
-        'target':   '0'
+        'url1':         '',
+        'xpath1':       '',
+        'url':          'http://',
+        'label':        '',
+        'xpath':        '//html',
+        'target':       '0',
     }
 
     def __init__(self):
@@ -27,10 +27,38 @@ class Settings:
         for key in self.DEFAULT.keys():
             self.data[key] = self.addon.getSetting(key)
 
-    def clear(self):
+    def values(self):
         for key in self.DEFAULT.keys():
             self.addon.setSetting(key, self.DEFAULT[key])
         return self.data
+
+#-------------------------------------------------------------------------------
+class Arguments:
+
+    DEFAULT = {
+        'action':       None,
+        'label':        '',
+        'url':          '',
+        'xpath':        '',
+        'target':       '',
+        'renew':        '',
+        'image_file':   '',
+        'text_file':    '',
+        'title':        '',
+        'wav_file':     '',
+    }
+
+    def __init__(self):
+        args = urlparse.parse_qs(sys.argv[2][1:])
+        self.data = {}
+        for key in self.DEFAULT.keys():
+            self.data[key] = args.get(key, [self.DEFAULT[key]])[0]
+
+    def values(self):
+        args = []
+        for key in ('action','label','url','xpath','target','renew','image_file','text_file','title','wav_file'):
+            args.append(self.data[key])
+        return args
 
 #-------------------------------------------------------------------------------
 class Main:
@@ -165,24 +193,24 @@ class Main:
             # コンテクストメニュー
             menu = []
             #### ノードリストを表示する
-            values = {'action':'extract', 'url':url, 'xpath':xpath, 'target':Browser.TARGET_NODELIST}
+            values = {'action':'extract', 'url':url, 'xpath':xpath, 'target':Browser.TARGET_NODELIST, 'renew':True}
             query = 'Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             menu.append((self.addon.getLocalizedString(32922), query))
             #### リンクリストを表示する
-            values = {'action':'extract', 'url':url, 'xpath':xpath, 'target':Browser.TARGET_LINKLIST}
+            values = {'action':'extract', 'url':url, 'xpath':xpath, 'target':Browser.TARGET_LINKLIST, 'renew':True}
             query = 'Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             menu.append((self.addon.getLocalizedString(32921), query))
             #### キャプチャを表示する
-            values = {'action':'extract', 'url':url, 'xpath':xpath, 'target':Browser.TARGET_CAPTURE}
+            values = {'action':'extract', 'url':url, 'xpath':xpath, 'target':Browser.TARGET_CAPTURE, 'renew':True}
             query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             menu.append((self.addon.getLocalizedString(32923), query))
             #### テキストを表示する
-            values = {'action':'extract', 'url':url, 'xpath':xpath, 'target':Browser.TARGET_TEXT}
+            values = {'action':'extract', 'url':url, 'xpath':xpath, 'target':Browser.TARGET_TEXT, 'renew':True}
             query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             #### テキストを音声合成する
             menu.append((self.addon.getLocalizedString(32924), query))
             if self.addon.getSetting('tts'):
-                values = {'action':'extract', 'url':url, 'xpath':xpath, 'target':Browser.TARGET_WAV}
+                values = {'action':'extract', 'url':url, 'xpath':xpath, 'target':Browser.TARGET_WAV, 'renew':True}
                 query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
                 menu.append((self.addon.getLocalizedString(32925), query))
             #### この項目を設定する
@@ -203,12 +231,13 @@ class Main:
             item.addContextMenuItems(menu, replaceItems=True)
             values = {'action':'extract', 'url':url, 'xpath':xpath, 'target':target, 'renew':True}
             query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
-            xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, target in (Browser.TARGET_NODELIST, Browser.TARGET_LINKLIST))
+            #xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, target in (Browser.TARGET_NODELIST, Browser.TARGET_LINKLIST))
+            xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, True)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 #-------------------------------------------------------------------------------
 if __name__  == '__main__':
-    #
+    # アドオン
     addon = xbmcaddon.Addon()
     # 音声合成アドオンの有無を確認
     try:
@@ -220,22 +249,11 @@ if __name__  == '__main__':
     # chromedriverの設定を確認
     if addon.getSetting('chrome'):
         # 引数
-        log(sys.argv)
-        args = urlparse.parse_qs(sys.argv[2][1:])
-        action = args.get('action', [''])[0]
-        label = args.get('label', [''])[0]
-        url = args.get('url', [''])[0]
-        xpath = args.get('xpath', [''])[0]
-        target = args.get('target', [''])[0]
-        renew = args.get('renew', [False])[0]
-        image_file = args.get('image_file', [''])[0]
-        text_file = args.get('text_file', [''])[0]
-        title = args.get('title', [''])[0]
-        wav_file = args.get('wav_file', [''])[0]
+        (action,label,url,xpath,target,renew,image_file,text_file,title,wav_file) = Arguments().values()
         # アドオン設定
-        settings = Settings().clear()
+        settings = Settings().values()
         # actionに応じて処理
-        if action == '':
+        if action is None:
             # スタート画面を表示
             Main().show()
         elif action == 'extract':
