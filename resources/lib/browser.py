@@ -49,8 +49,9 @@ class Builder:
         (label, query) = self.show_text(self.xpath)
         menu.append((label, 'RunPlugin(%s)' % query))
         #### テキストを音声合成する
-        (label, query) = self.play_wav(self.xpath)
-        menu.append((label, 'RunPlugin(%s)' % query))
+        if self.addon.getSetting('tts'):
+            (label, query) = self.play_wav(self.xpath)
+            menu.append((label, 'RunPlugin(%s)' % query))
         #### トップに追加する
         (label, query) = self.add_to_top(self.xpath)
         menu.append((label, 'Container.Update(%s)' % query))

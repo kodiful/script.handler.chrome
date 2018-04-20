@@ -4,6 +4,7 @@ import xbmc, xbmcgui, xbmcplugin, xbmcaddon
 
 import urlparse, urllib
 import sys, os, json
+import datetime
 
 from resources.lib.browser import Browser
 from resources.lib.common import log, notify
@@ -13,12 +14,12 @@ from resources.lib.utilities import show_image, show_text
 class Settings:
 
     DEFAULT = {
-        'url1':         '',
-        'xpath1':       '',
+        'itemid':       '',
         'url':          'http://',
         'label':        '',
         'xpath':        '//html',
-        'target':       '0',
+        'target1':       '0',
+        'target2':       '0',
     }
 
     def __init__(self):
@@ -41,6 +42,7 @@ class Arguments:
         'url':          '',
         'xpath':        '',
         'target':       '',
+        'itemid':       '',
         'renew':        '',
         'image_file':   '',
         'text_file':    '',
@@ -56,7 +58,7 @@ class Arguments:
 
     def values(self):
         args = []
-        for key in ('action','label','url','xpath','target','renew','image_file','text_file','title','wav_file'):
+        for key in ('action','label','url','xpath','target','itemid','renew','image_file','text_file','title','wav_file'):
             args.append(self.data[key])
         return args
 
@@ -98,41 +100,41 @@ class Main:
         self.data = []
         self.write()
 
-    def delete(self, url, xpath):
+    def delete(self, itemid):
         data1 = []
         for data in self.data:
-            if url == data['url'] and xpath == data['xpath']:
-                pass
-            else:
+            if itemid != data['itemid']:
                 data1.append(data)
         self.data = data1
         self.write()
         # スタート画面を更新
         xbmc.executebuiltin('Container.Update(plugin://%s)' % self.addon.getAddonInfo('id'))
 
-    def edit(self, label, url, xpath, target):
+    def edit(self, label, url, xpath, target, itemid):
         # 設定画面に反映
-        self.addon.setSetting('url1', url)
-        self.addon.setSetting('xpath1', xpath)
+        self.addon.setSetting('itemid', itemid)
         self.addon.setSetting('url', url)
         self.addon.setSetting('label', label)
         self.addon.setSetting('xpath', xpath)
-        self.addon.setSetting('target', target)
+        self.addon.setSetting('target1', target)
+        self.addon.setSetting('target2', target)
         # 設定画面を開く
         self.addon.openSettings()
 
     def edited(self, settings):
         # 設定を取得
-        url1 = settings['url1']
-        xpath1 = settings['xpath1']
+        itemid = settings['itemid']
         url = settings['url']
         label = settings['label']
         xpath = settings['xpath']
-        target = settings['target']
+        if self.addon.getSetting('tts'):
+            target = settings['target2']
+        else:
+            target = settings['target1']
         # 設定更新
-        self.append(label, url, xpath, target, url1, xpath1)
+        self.append(label, url, xpath, target, itemid)
 
-    def append(self, label, url, xpath, target, url1=None, xpath1=None):
+    def append(self, label, url, xpath, target, itemid):
         # 文字コード変換
         if isinstance(label, str): label = label.decode('utf-8')
         if isinstance(url, str): url = url.decode('utf-8')
@@ -140,17 +142,8 @@ class Main:
         if isinstance(target, str): target = target.decode('utf-8')
         # 設定更新
         for data in self.data:
-            if url1 == data['url'] and xpath1 == data['xpath']:
+            if itemid == data['itemid']:
                 # 既存の設定を更新
-                data['url'] = url
-                data['label'] = label
-                data['xpath'] = xpath
-                data['target'] = int(target)
-                # 更新フラグを設定
-                data['flag'] = True
-                break
-            elif url == data['url'] and xpath == data['xpath']:
-                # 重複する設定を更新
                 data['url'] = url
                 data['label'] = label
                 data['xpath'] = xpath
@@ -163,12 +156,11 @@ class Main:
             info = Browser(url).extract(xpath)
             # 設定を追加
             data = {}
+            data['itemid'] = datetime.datetime.now().strftime('%s')
             data['url'] = url
-            data['target'] = int(target)
-            # ラベルを補完
             data['label'] = label or info['title'] or '(Untitled)'
-            # XPATHを最適化
             data['xpath'] = info['optimized_xpath']
+            data['target'] = int(target)
             # 更新フラグを設定
             data['flag'] = True
             self.data.append(data)
@@ -184,6 +176,7 @@ class Main:
             label = data['label']
             xpath = data['xpath']
             target = data['target']
+            itemid = data['itemid']
             # フラグ
             flag = data.get('flag',False)
             if flag:
@@ -202,23 +195,26 @@ class Main:
             menu.append((self.addon.getLocalizedString(32921), query))
             #### キャプチャを表示する
             values = {'action':'extract', 'url':url, 'xpath':xpath, 'target':Browser.TARGET_CAPTURE, 'renew':True}
-            query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
+            #query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
+            query = 'Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             menu.append((self.addon.getLocalizedString(32923), query))
             #### テキストを表示する
             values = {'action':'extract', 'url':url, 'xpath':xpath, 'target':Browser.TARGET_TEXT, 'renew':True}
-            query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
+            #query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
+            query = 'Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             #### テキストを音声合成する
             menu.append((self.addon.getLocalizedString(32924), query))
             if self.addon.getSetting('tts'):
                 values = {'action':'extract', 'url':url, 'xpath':xpath, 'target':Browser.TARGET_WAV, 'renew':True}
-                query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
+                #query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
+                query = 'Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
                 menu.append((self.addon.getLocalizedString(32925), query))
             #### この項目を設定する
-            values = {'action':'edit', 'label':label.encode('utf-8'), 'url':url, 'xpath':xpath, 'target':target}
+            values = {'action':'edit', 'label':label.encode('utf-8'), 'url':url, 'xpath':xpath, 'target':target, 'itemid':itemid}
             query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             menu.append((self.addon.getLocalizedString(32911), query))
             #### この項目を削除する
-            values = {'action':'delete', 'url':url, 'xpath':xpath}
+            values = {'action':'delete', 'itemid':itemid}
             query = 'RunPlugin(%s?%s)' % (sys.argv[0], urllib.urlencode(values))
             menu.append((self.addon.getLocalizedString(32912), query))
             #### アドオン設定
@@ -249,7 +245,7 @@ if __name__  == '__main__':
     # chromedriverの設定を確認
     if addon.getSetting('chrome'):
         # 引数
-        (action,label,url,xpath,target,renew,image_file,text_file,title,wav_file) = Arguments().values()
+        (action,label,url,xpath,target,itemid,renew,image_file,text_file,title,wav_file) = Arguments().values()
         # アドオン設定
         settings = Settings().values()
         # actionに応じて処理
@@ -262,19 +258,18 @@ if __name__  == '__main__':
             else:
                 Browser().extract(xpath, target)
         elif action == 'append':
-            Main().append(label, url, xpath, target)
+            Main().append(label, url, xpath, target, itemid)
         elif action == 'edit':
-            Main().edit(label, url, xpath, target)
+            Main().edit(label, url, xpath, target, itemid)
         elif action == 'edited':
             Main().edited(settings)
         elif action == 'delete':
-            Main().delete(url, xpath)
-        # following actions requires isFoldert=False
+            Main().delete(itemid)
         elif action == 'show_image':
             show_image(image_file)
         elif action == 'show_text':
             show_text(text_file, title)
-        # following actions are for plugin execution
+        # for plugin execution
         elif action == 'files':
             Browser(url).extract(xpath, target=Browser.TARGET_FILES, image_file=image_file, text_file=text_file, wav_file=wav_file)
     else:
