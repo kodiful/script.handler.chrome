@@ -6,7 +6,7 @@ import urlparse, urllib
 import sys, os, json
 import datetime
 
-from resources.lib.browser import Browser
+from resources.lib.browser import Browser, Google
 from resources.lib.common import log, notify
 from resources.lib.utilities import show_image, show_text
 
@@ -18,8 +18,9 @@ class Settings:
         'url':          'http://',
         'label':        '',
         'xpath':        '//html',
-        'target1':       '0',
-        'target2':       '0',
+        'target1':      '0',
+        'target2':      '0',
+        'keyword':      '',
     }
 
     def __init__(self):
@@ -49,6 +50,7 @@ class Arguments:
         'text_file':    '',
         'title':        '',
         'wav_file':     '',
+        'keyword':     '',
     }
 
     def __init__(self):
@@ -56,11 +58,11 @@ class Arguments:
         self.data = {}
         for key in self.DEFAULT.keys():
             self.data[key] = args.get(key, [self.DEFAULT[key]])[0]
-        log(self.data)
+        #log(self.data)
 
     def values(self):
         args = []
-        for key in ('realm','action','label','url','xpath','target','itemid','image_file','text_file','title','wav_file'):
+        for key in ('realm','action','label','url','xpath','target','itemid','image_file','text_file','title','wav_file','keyword'):
             args.append(self.data[key])
         return args
 
@@ -161,7 +163,7 @@ class Main:
             data = {}
             data['itemid'] = datetime.datetime.now().strftime('%s')
             data['url'] = url
-            data['label'] = label or info['title'] or '(Untitled)'
+            data['label'] = label or info['title'] or '(Selected Node)'
             data['xpath'] = info['optimized_xpath']
             data['target'] = int(target)
             # 更新フラグを設定
@@ -234,6 +236,7 @@ class Main:
             xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, True)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
+
 #-------------------------------------------------------------------------------
 if __name__  == '__main__':
     # アドオン
@@ -248,7 +251,7 @@ if __name__  == '__main__':
     # chromedriverの設定を確認
     if addon.getSetting('chrome'):
         # 引数
-        (realm,action,label,url,xpath,target,itemid,image_file,text_file,title,wav_file) = Arguments().values()
+        (realm,action,label,url,xpath,target,itemid,image_file,text_file,title,wav_file,keyword) = Arguments().values()
         # アドオン設定
         settings = Settings().values()
         # actionに応じて処理
@@ -268,6 +271,12 @@ if __name__  == '__main__':
             show_image(image_file)
         elif action == 'show_text':
             show_text(text_file, title)
+        elif action == 'search':
+            keyword = settings['keyword'].decode('utf-8')
+            values = {'action':'show_search', 'keyword':keyword}
+            xbmc.executebuiltin('Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values)))
+        elif action == 'show_search':
+            Google().extract(keyword)
         # for plugin execution
         elif action == 'files':
             Browser(url, realm).extract(xpath, target=Browser.TARGET_FILES, image_file=image_file, text_file=text_file, wav_file=wav_file)

@@ -56,14 +56,32 @@ class Builder:
 
     def add_to_top(self, xpath, content=None):
         label = self.addon.getLocalizedString(32919)
+        title =  self.driver.title.encode('utf-8')
+        if content:
+            content = '%s - %s' % (content,title)
+        else:
+            content = title
         values = {'action':'append', 'label':content or self.driver.title.encode('utf-8'), 'url':self.url, 'xpath':xpath, 'target':self.target}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         query = 'RunPlugin(%s)' % query
         return (label, query)
 
+    def extract_text_from_element(select, elem):
+        if elem.text.replace(' ','').replace('\n',''):
+            text = elem.text.replace('\n',' ').encode('utf-8')
+        else:
+            text = []
+            imgs = elem.find_elements_by_xpath(".//img[@alt!='']")
+            for img in imgs:
+                alt = img.get_attribute('alt')
+                if alt.replace(' ','').replace('\n',''):
+                    text.append(alt.replace('\n',' ').encode('utf-8'))
+            text = ' '.join(text)
+        return text
+
     def current_page(self):
         # アイテムを作成
-        content = self.driver.title.replace('\n',' ').encode('utf-8') or '(Untitled)'
+        content = self.driver.title.replace('\n',' ').encode('utf-8') or '(Selected Page)'
         label = '[COLOR white]%s[/COLOR]' % content
         page_image_file = self.page_image_file
         item = xbmcgui.ListItem(label, iconImage=page_image_file, thumbnailImage=page_image_file)
@@ -77,8 +95,8 @@ class Builder:
 
     def current_node(self):
         # アイテムを作成
-        content = self.elem.text.replace('\n',' ').encode('utf-8') or '(Untitled)'
-        label = '[COLOR yellow]%s[/COLOR]' % content
+        text = self.extract_text_from_element(self.elem) or '(Selected Node)'
+        label = '[COLOR yellow]%s[/COLOR]' % text
         node_image_file = self.node_image_file
         item = xbmcgui.ListItem(label, iconImage=node_image_file, thumbnailImage=node_image_file)
         # コンテクストメニュー
@@ -95,7 +113,43 @@ class Builder:
         if self.addon.getSetting('tts'):
             context_menu.append(self.play_wav(self.xpath))
         #### トップに追加する
-        context_menu.append(self.add_to_top(self.xpath,content))
+        context_menu.append(self.add_to_top(self.xpath,text))
+        # コンテクストメニューを設定
+        item.addContextMenuItems(context_menu, replaceItems=True)
+        # アイテムを追加
+        values = {'action':'show_image', 'image_file':node_image_file}
+        query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
+        xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, False)
+
+    def parent_node(self):
+        # 親ノードを抽出
+        try:
+            xpath = '%s/..' % self.xpath
+            elem = self.elem.find_element_by_xpath("./..")
+        except:
+            return
+        # アイテムを作成
+        text = self.extract_text_from_element(elem) or '(Parent Node)'
+        label = '[COLOR khaki]%s[/COLOR]' % text
+        node_image_file = os.path.join(self.cachedir, '%s_%s.png' % (self.driver.session_id,hashlib.md5(xpath).hexdigest()))
+        if not os.path.isfile(node_image_file):
+            self.chrome.save_image(node_image_file, element=elem)
+        item = xbmcgui.ListItem(label, iconImage=node_image_file, thumbnailImage=node_image_file)
+        # コンテクストメニュー
+        context_menu = []
+        #### ノードリストを表示する
+        context_menu.append(self.show_childnodes(xpath))
+        #### リンクリストを表示する
+        context_menu.append(self.show_links(xpath))
+        #### キャプチャを表示する
+        context_menu.append(self.show_image(xpath))
+        #### テキストを表示する
+        context_menu.append(self.show_text(xpath))
+        #### テキストを音声合成する
+        if self.addon.getSetting('tts'):
+            context_menu.append(self.play_wav(xpath))
+        #### トップに追加する
+        context_menu.append(self.add_to_top(xpath,text))
         # コンテクストメニューを設定
         item.addContextMenuItems(context_menu, replaceItems=True)
         # アイテムを追加
@@ -109,24 +163,23 @@ class Builder:
         ua_width = self.chrome.ua['width']
         elems = self.driver.find_elements_by_xpath('%s/*' % xpath)
         for i in range(0,len(elems)):
-            # スペース、改行以外のテキストを含むノードについて
-            if elems[i].text.replace(' ','').replace('\n',''):
-                xpath1 = xpath + "/*[%d]" % (i+1)
-                width = elems[i].size['width']
-                height = elems[i].size['height']
-                if height>0 and width>0 and height<ua_height and width<ua_width and (height<ua_height/2 or width<ua_width/2):
-                    # 処理対象とするxpath
-                    xpath2 = xpath1
-                    # キャプチャを取得
-                    image_file = os.path.join(self.cachedir, '%s_%s.png' % (self.driver.session_id,hashlib.md5(xpath2).hexdigest()))
-                    if not os.path.isfile(image_file):
-                        self.chrome.save_image(image_file, element=elems[i])
-                    # テキストを取得
-                    text_file = os.path.join(self.cachedir, '%s_%s.txt' % (self.driver.session_id,hashlib.md5(xpath2).hexdigest()))
-                    if not os.path.isfile(text_file):
-                        self.chrome.save_text(text_file, element=elems[i])
-                    # ラベル
-                    content = elems[i].text.replace('\n',' ').encode('utf-8')
+            xpath1 = xpath + "/*[%d]" % (i+1)
+            width = elems[i].size['width']
+            height = elems[i].size['height']
+            if height>0 and width>0 and height<ua_height and width<ua_width and (height<ua_height/2 or width<ua_width/2):
+                # 処理対象とするxpath
+                xpath2 = xpath1
+                # キャプチャを取得
+                image_file = os.path.join(self.cachedir, '%s_%s.png' % (self.driver.session_id,hashlib.md5(xpath2).hexdigest()))
+                if not os.path.isfile(image_file):
+                    self.chrome.save_image(image_file, element=elems[i])
+                # テキストを取得
+                text_file = os.path.join(self.cachedir, '%s_%s.txt' % (self.driver.session_id,hashlib.md5(xpath2).hexdigest()))
+                if not os.path.isfile(text_file):
+                    self.chrome.save_text(text_file, element=elems[i])
+                # ラベル
+                text = self.extract_text_from_element(elems[i])
+                if text:
                     # コンテクストメニュー設定
                     context_menu = []
                     #### ノードリストを表示する
@@ -141,18 +194,18 @@ class Builder:
                     if self.addon.getSetting('tts'):
                         context_menu.append(self.play_wav(xpath2))
                     #### トップに追加する
-                    context_menu.append(self.add_to_top(xpath2,content))
+                    context_menu.append(self.add_to_top(xpath2,text))
                     #### リンクを抽出してコンテクストメニューに設定
                     for (label, query) in self.linklist(elems[i]):
                         context_menu.append((label, 'Container.Update(%s)' % query))
                     # データを格納
-                    label = '[COLOR orange]%s[/COLOR]' % content
+                    label = '[COLOR orange]%s[/COLOR]' % text
                     values = {'action':'show_image', 'image_file':image_file}
                     query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
                     list.append((label, query, image_file, text_file, context_menu))
-                else:
-                    # サイズが対象外の場合は、子ノードに対して処理した結果を加える
-                    list = list + self.nodelist(xpath1)
+            else:
+                # サイズが対象外の場合は、子ノードに対して処理した結果を加える
+                list = list + self.nodelist(xpath1)
         if len(list) == 1:
             # 抽出ノード数が1の場合は、子ノードに対して処理した結果で置換する
             list = self.nodelist(xpath2)
@@ -160,13 +213,63 @@ class Builder:
 
     def linklist(self, elem):
         list = []
-        for a in elem.find_elements_by_xpath(".//a[starts-with(@href,'http')]"):
-            if a.text.replace(' ','').replace('\n',''):
-                label = '[COLOR blue]%s[/COLOR]' % a.text.replace('\n',' ')
-                values = {'action':'extract', 'url':a.get_attribute('href'), 'target':Browser.TARGET_NODELIST}
-                query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
-                list.append((label, query))
+        for a in elem.find_elements_by_xpath(".//a"):
+            href = a.get_attribute('href')
+            if href and href.find('http') == 0:
+                # ラベル
+                text = self.extract_text_from_element(a)
+                if text:
+                    label = '[COLOR blue]%s[/COLOR]' % text
+                    values = {'action':'extract', 'url':href, 'target':Browser.TARGET_NODELIST}
+                    query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
+                    list.append((label, query))
         return list
+
+#-------------------------------------------------------------------------------
+class Google(Builder):
+
+    def __init__(self):
+        # アドオン
+        self.addon = xbmcaddon.Addon()
+        addon_id = self.addon.getAddonInfo('id')
+        addon_profile = self.addon.getAddonInfo('profile')
+        # キャッシュディレクトリを設定
+        self.cachedir = os.path.join(xbmc.translatePath(addon_profile), addon_id, 'cache')
+        if not os.path.isdir(self.cachedir): os.makedirs(self.cachedir)
+        # ウェブドライバを設定
+        url = 'https://www.google.co.jp/webhp'
+        ua = 'iPad Pro'
+        self.chrome = Chrome(url=url, realm=None, ua=ua, managed=False)
+        self.driver = self.chrome.driver
+
+    def extract(self, keyword):
+        # 検索窓を抽出
+        input = self.driver.find_element_by_xpath("//input[@name='q']")
+        # キーワードを入力
+        input.send_keys(keyword)
+        input.send_keys(Chrome.ENTER)
+        # 検索結果を抽出
+        heading = self.driver.find_elements_by_xpath("//a/div[@role='heading']")
+        list = []
+        for div in heading:
+            a = div.find_element_by_xpath("./..")
+            label = '[COLOR blue]%s[/COLOR]' % div.text.encode('utf-8')
+            values = {'action':'extract', 'url':a.get_attribute('href'), 'target':Browser.TARGET_NODELIST}
+            query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
+            list.append((label, query))
+        # 画面全体をキャプチャ
+        self.page_image_file = os.path.join(self.cachedir, '%s.png' % (self.driver.session_id))
+        if not os.path.isfile(self.page_image_file):
+            self.chrome.save_image(self.page_image_file)
+        # 親ページを表示する
+        self.current_page()
+        # リンクのリスト
+        for (label, query) in list:
+            item = xbmcgui.ListItem(label)
+            xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, True)
+        xbmcplugin.endOfDirectory(int(sys.argv[1]))
+        # ウェブドライバを終了
+        self.driver.close()
 
 #-------------------------------------------------------------------------------
 class Browser(Builder):
@@ -246,6 +349,8 @@ class Browser(Builder):
         # 親ページを表示する
         self.current_page()
         # 親ノードを表示する
+        self.parent_node()
+        # 現ノードを表示する
         self.current_node()
         # 子ノードのリスト
     	for (label, query, image_file, text_file, context_menu) in self.nodelist(self.xpath):
@@ -257,7 +362,7 @@ class Browser(Builder):
     def __extract_linklist(self):
         # 親ページを表示する
         self.current_page()
-        # 親ノードを表示する
+        # 現ノードを表示する
         self.current_node()
         # リンクのリスト
         for (label, query) in self.linklist(self.elem):
@@ -292,6 +397,17 @@ class Browser(Builder):
             #show_image(self.node_image_file)
             show_text(self.node_text_file, self.driver.title.encode('utf-8'))
             xbmc.executebuiltin('PlayMedia(%s)' % self.node_wav_file)
+
+    def __extract_search_results(self):
+        # 親ページを表示する
+        self.current_page()
+        # 親ノードを表示する
+        self.current_node()
+        # リンクのリスト
+        for (label, query) in self.linklist(self.elem):
+            item = xbmcgui.ListItem(label)
+            xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, True)
+        xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
     def __extract_files(self, image_file=None, text_file=None, wav_file=None):
         if image_file and os.path.isfile(self.node_image_file):

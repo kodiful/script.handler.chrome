@@ -19,6 +19,10 @@
   <string id="32302">Screen size</string>
   <string id="32303">Debug</string>
 
+  <string id="32400">Web search</string>
+  <string id="32401">Keyword</string>
+  <string id="32402">[COLOR green]Search[/COLOR]</string>
+
   <string id="32901">Link list</string>
   <string id="32902">ChildNode list</string>
   <string id="32903">Capture</string>

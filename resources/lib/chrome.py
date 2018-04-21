@@ -14,6 +14,7 @@ from common import log, notify
 sys.path.append(os.path.join(xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('path')), 'resources', 'lib', 'selenium-3.9.0'))
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.keys import Keys
 
 #-------------------------------------------------------------------------------
 class Session:
@@ -105,52 +106,62 @@ class Chrome:
             'user_agent': 'Mozilla/5.0 (iPad; CPU OS 11_0 like Mac OS X) AppleWebKit/604.1.34 (KHTML, like Gecko) Version/11.0 Mobile/15A5341f Safari/604.1',
             'width': 1024,
             'height': 1366
+        },
+        'MacBook': {
+            'user_agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.1 Safari/605.1.15',
+            'width': 1366,
+            'height': 768
         }
     }
 
-    def __init__(self, url, realm=None):
+    ENTER = Keys.ENTER
+
+    def __init__(self, url, realm=None, ua=None, managed=True):
         # アドオン
         self.addon = xbmcaddon.Addon()
         # ユーザエージェント
-        ua = self.addon.getSetting('ua')
+        ua = ua or self.addon.getSetting('ua')
         self.ua = self.USER_AGENT[ua]
         # オプション
         options = Options()
         options.add_argument('headless')
         options.add_argument('disable-gpu')
         options.add_argument('user-agent=%s' % self.ua['user_agent'])
-        # セッション情報
-        self.session = Session(realm)
-        # ウェブドライバを生成
-        self.driver = self.session.restore(options)
-        # 既存のウェブドライバがある場合
-        if self.driver:
-            # ページ遷移しない場合
-            if url == self.session.url:
-                # 既存のウェブドライバをそのまま使う
-                self.renewed = False
-                return
-            # ページ遷移する場合
-            else:
-                # 既存のウェブドライバを破棄
-                self.__close()
+        if managed:
+            # セッション情報
+            self.session = Session(realm)
+            # ウェブドライバを生成
+            self.driver = self.session.restore(options)
+            # 既存のウェブドライバがある場合
+            if self.driver:
+                # ページ遷移しない場合
+                if url == self.session.url:
+                    # 既存のウェブドライバをそのまま使う
+                    self.renewed = False
+                    return
+                # ページ遷移する場合
+                else:
+                    # 既存のウェブドライバを破棄
+                    self.__close()
         # ウェブドライバを新規作成
-        self.__new(options, realm)
+        self.__new(options, realm, managed)
         self.renewed = True
         # ページを開く
-        self.__open(url)
+        self.__open(url, managed)
 
-    def __new(self, options, realm):
+    def __new(self, options, realm, managed=True):
         # ウェブドライバを作成
         executable_path = self.addon.getSetting('chrome')
         self.driver = webdriver.Chrome(executable_path=executable_path, chrome_options=options)
+        #self.driver.implicitly_wait(10)
         # セッション情報を保存
-        self.session.save(self.driver)
-        # セッションのメンテナンスを開始
-        args = (self.driver.command_executor._url, self.driver.session_id, realm)
-        threading.Thread(target=self.__watchdog, args=args).start()
+        if managed:
+            self.session.save(self.driver)
+            # セッションのメンテナンスを開始
+            args = (self.driver.command_executor._url, self.driver.session_id, realm)
+            threading.Thread(target=self.__watchdog, args=args).start()
 
-    def __open(self, url):
+    def __open(self, url, managed=True):
         # ウィンドウサイズをリセット
         self.driver.set_window_size(self.ua['width'],self.ua['height'])
         # ページ読み込み
@@ -161,13 +172,15 @@ class Chrome:
         # ウィンドウサイズをアジャスト
         self.driver.set_window_size(width,height)
         # セッション情報を保存
-        self.session.save(self.driver, url)
+        if managed:
+            self.session.save(self.driver, url)
 
-    def __close(self):
+    def __close(self, managed=True):
         # ウェブドライバを閉じる
         self.driver.close()
         # セッション情報をクリア
-        self.session.clear()
+        if managed:
+            self.session.clear()
 
     def save_image(self, image_file, element=None, xpath=None):
         # 画面全体のイメージを取得

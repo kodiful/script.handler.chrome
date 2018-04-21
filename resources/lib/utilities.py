@@ -22,5 +22,5 @@ def show_text(text_file, title=None):
     xbmc.sleep(1000)
     # ウィンドウへ書き込む
     viewer = xbmcgui.Window(viewer_id)
-    viewer.getControl(1).setLabel(title or '(Untitled)')
+    viewer.getControl(1).setLabel(title or '(Selected Node)')
     viewer.getControl(5).setText(data)

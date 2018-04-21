@@ -16,9 +16,13 @@
     <setting label="32206" type="action" option="close" action="RunPlugin(plugin://$ID/?action=edited)" enable="!eq(-5,)" visible="eq(-6,)"/>
     <setting label="32207" type="action" option="close" action="RunPlugin(plugin://$ID/?action=edited)" enable="!eq(-6,)+!eq(-5,)+!eq(-4,)" visible="!eq(-7,)"/>
   </category>
+  <category label="32400">
+    <setting label="32401" id="keyword" type="text" default=""/>
+    <setting label="32402" type="action" option="close" action="RunPlugin(plugin://$ID/?action=search)" enable="!eq(-1,)"/>
+  </category>
   <category label="32300">
     <setting label="32301" id="chrome" type="file" default=""/>
-    <setting label="32302" id="ua" type="labelenum" values="iPad Pro|iPad|iPhone 6/7/8 Plus|iPhone 6/7/8" default="iPad Pro"/>
+    <setting label="32302" id="ua" type="labelenum" values="MacBook|iPad Pro|iPad|iPhone 6/7/8 Plus|iPhone 6/7/8" default="MacBook"/>
     <setting label="32303" id="debug" type="bool" default="false"/>
   </category>
 </settings>
