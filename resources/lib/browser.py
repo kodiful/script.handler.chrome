@@ -93,40 +93,13 @@ class Builder:
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
         xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, False)
 
-    def current_node(self):
-        # アイテムを作成
-        text = self.extract_text_from_element(self.elem) or '(Selected Node)'
-        label = '[COLOR yellow]%s[/COLOR]' % text
-        node_image_file = self.node_image_file
-        item = xbmcgui.ListItem(label, iconImage=node_image_file, thumbnailImage=node_image_file)
-        # コンテクストメニュー
-        context_menu = []
-        #### ノードリストを表示する
-        context_menu.append(self.show_childnodes(self.xpath))
-        #### リンクリストを表示する
-        context_menu.append(self.show_links(self.xpath))
-        #### キャプチャを表示する
-        context_menu.append(self.show_image(self.xpath))
-        #### テキストを表示する
-        context_menu.append(self.show_text(self.xpath))
-        #### テキストを音声合成する
-        if self.addon.getSetting('tts'):
-            context_menu.append(self.play_wav(self.xpath))
-        #### トップに追加する
-        context_menu.append(self.add_to_top(self.xpath,text))
-        # コンテクストメニューを設定
-        item.addContextMenuItems(context_menu, replaceItems=True)
-        # アイテムを追加
-        values = {'action':'show_image', 'image_file':node_image_file}
-        query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
-        xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, False)
-
     def parent_node(self):
         # 親ノードを抽出
         try:
             xpath = '%s/..' % self.xpath
             elem = self.elem.find_element_by_xpath("./..")
         except:
+            # 親ノードがないルートノードはスキップ
             return
         # アイテムを作成
         text = self.extract_text_from_element(elem) or '(Parent Node)'
@@ -150,6 +123,34 @@ class Builder:
             context_menu.append(self.play_wav(xpath))
         #### トップに追加する
         context_menu.append(self.add_to_top(xpath,text))
+        # コンテクストメニューを設定
+        item.addContextMenuItems(context_menu, replaceItems=True)
+        # アイテムを追加
+        values = {'action':'show_image', 'image_file':node_image_file}
+        query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
+        xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, False)
+
+    def current_node(self):
+        # アイテムを作成
+        text = self.extract_text_from_element(self.elem) or '(Selected Node)'
+        label = '[COLOR yellow]%s[/COLOR]' % text
+        node_image_file = self.node_image_file
+        item = xbmcgui.ListItem(label, iconImage=node_image_file, thumbnailImage=node_image_file)
+        # コンテクストメニュー
+        context_menu = []
+        #### ノードリストを表示する
+        context_menu.append(self.show_childnodes(self.xpath))
+        #### リンクリストを表示する
+        context_menu.append(self.show_links(self.xpath))
+        #### キャプチャを表示する
+        context_menu.append(self.show_image(self.xpath))
+        #### テキストを表示する
+        context_menu.append(self.show_text(self.xpath))
+        #### テキストを音声合成する
+        if self.addon.getSetting('tts'):
+            context_menu.append(self.play_wav(self.xpath))
+        #### トップに追加する
+        context_menu.append(self.add_to_top(self.xpath,text))
         # コンテクストメニューを設定
         item.addContextMenuItems(context_menu, replaceItems=True)
         # アイテムを追加
@@ -247,7 +248,7 @@ class Google(Builder):
         input = self.driver.find_element_by_xpath("//input[@name='q']")
         # キーワードを入力
         input.send_keys(keyword)
-        input.send_keys(Chrome.ENTER)
+        input.send_keys(Chrome.KEYS_ENTER)
         # 検索結果を抽出
         heading = self.driver.find_elements_by_xpath("//a/div[@role='heading']")
         list = []
@@ -372,9 +373,11 @@ class Browser(Builder):
 
     def __extract_image(self):
         show_image(self.node_image_file)
+        xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
 
     def __extract_text(self):
         show_text(self.node_text_file, self.driver.title.encode('utf-8'))
+        xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
 
     def __extract_wav(self, play=True):
         # 指定部分のテキストから音声合成

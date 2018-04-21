@@ -114,7 +114,7 @@ class Chrome:
         }
     }
 
-    ENTER = Keys.ENTER
+    KEYS_ENTER = Keys.ENTER
 
     def __init__(self, url, realm=None, ua=None, managed=True):
         # アドオン
@@ -127,7 +127,9 @@ class Chrome:
         options.add_argument('headless')
         options.add_argument('disable-gpu')
         options.add_argument('user-agent=%s' % self.ua['user_agent'])
-        if managed:
+        # セッション管理
+        self.managed = managed
+        if self.managed:
             # セッション情報
             self.session = Session(realm)
             # ウェブドライバを生成
@@ -144,24 +146,25 @@ class Chrome:
                     # 既存のウェブドライバを破棄
                     self.__close()
         # ウェブドライバを新規作成
-        self.__new(options, realm, managed)
+        self.__new(options, realm)
         self.renewed = True
         # ページを開く
-        self.__open(url, managed)
+        self.__open(url)
 
-    def __new(self, options, realm, managed=True):
+    def __new(self, options, realm):
         # ウェブドライバを作成
         executable_path = self.addon.getSetting('chrome')
         self.driver = webdriver.Chrome(executable_path=executable_path, chrome_options=options)
         #self.driver.implicitly_wait(10)
-        # セッション情報を保存
-        if managed:
+        # セッション管理
+        if self.managed:
+            # セッション情報を保存
             self.session.save(self.driver)
             # セッションのメンテナンスを開始
             args = (self.driver.command_executor._url, self.driver.session_id, realm)
             threading.Thread(target=self.__watchdog, args=args).start()
 
-    def __open(self, url, managed=True):
+    def __open(self, url):
         # ウィンドウサイズをリセット
         self.driver.set_window_size(self.ua['width'],self.ua['height'])
         # ページ読み込み
@@ -172,14 +175,15 @@ class Chrome:
         # ウィンドウサイズをアジャスト
         self.driver.set_window_size(width,height)
         # セッション情報を保存
-        if managed:
+        if self.managed:
             self.session.save(self.driver, url)
 
-    def __close(self, managed=True):
+    def __close(self):
         # ウェブドライバを閉じる
         self.driver.close()
-        # セッション情報をクリア
-        if managed:
+        # セッション管理
+        if self.managed:
+            # セッション情報をクリア
             self.session.clear()
 
     def save_image(self, image_file, element=None, xpath=None):

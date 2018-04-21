@@ -112,7 +112,7 @@ class Main:
         self.data = data1
         self.write()
         # スタート画面を更新
-        xbmc.executebuiltin('Container.Update(plugin://%s)' % self.addon.getAddonInfo('id'))
+        xbmc.executebuiltin('Container.Update(%s)' % sys.argv[0])
 
     def edit(self, label, url, xpath, target, itemid):
         # 設定画面に反映
@@ -172,7 +172,12 @@ class Main:
         # ファイル書き込み
         self.write()
         # スタート画面を更新
-        xbmc.executebuiltin('Container.Update(plugin://%s)' % self.addon.getAddonInfo('id'))
+        xbmc.executebuiltin('Container.Update(%s)' % sys.argv[0])
+
+    def search(self, settings):
+        keyword = settings['keyword'].decode('utf-8')
+        values = {'action':'show_search', 'keyword':keyword}
+        xbmc.executebuiltin('Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values)))
 
     def show(self):
         # 表示
@@ -267,17 +272,15 @@ if __name__  == '__main__':
             Main().edited(settings)
         elif action == 'delete':
             Main().delete(itemid)
+        elif action == 'search':
+            Main().search(settings)
+        elif action == 'show_search':
+            Google().extract(keyword)
         elif action == 'show_image':
             show_image(image_file)
         elif action == 'show_text':
             show_text(text_file, title)
-        elif action == 'search':
-            keyword = settings['keyword'].decode('utf-8')
-            values = {'action':'show_search', 'keyword':keyword}
-            xbmc.executebuiltin('Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values)))
-        elif action == 'show_search':
-            Google().extract(keyword)
-        # for plugin execution
+        # for execution from other addons
         elif action == 'files':
             Browser(url, realm).extract(xpath, target=Browser.TARGET_FILES, image_file=image_file, text_file=text_file, wav_file=wav_file)
     else:
