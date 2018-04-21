@@ -31,6 +31,7 @@ class Session:
         self.filepath = os.path.join(self.dirpath, 'session.json')
 
     def read(self):
+        # ファイルがあれば読み込む
         if os.path.isfile(self.filepath):
             try:
                 f = open(self.filepath, 'r')
@@ -44,6 +45,9 @@ class Session:
         return data
 
     def write(self, data):
+        # タイムスタンプを設定
+        data['timestamp'] = int(datetime.datetime.now().strftime('%s'))
+        # ファイルへ書き込む
         f = open(self.filepath, 'w')
         f.write(json.dumps(data, sort_keys=True, ensure_ascii=False, indent=2).encode('utf-8'))
         f.close()
@@ -64,6 +68,8 @@ class Session:
                 self.driver = webdriver.Remote(data['executor_url'], desired_capabilities=options.to_capabilities())
                 self.driver.session_id = data['session_id']
                 self.url = data['url']
+                # タイムスタンプを更新する
+                self.write(data)
             except:
                 self.clear()
         else:
@@ -102,7 +108,7 @@ class Chrome:
         }
     }
 
-    def __init__(self, url=None, realm=None):
+    def __init__(self, url, realm=None):
         # アドオン
         self.addon = xbmcaddon.Addon()
         # ユーザエージェント
@@ -117,15 +123,22 @@ class Chrome:
         self.session = Session(realm)
         # ウェブドライバを生成
         self.driver = self.session.restore(options)
-        if url:
-            # ページ遷移する場合は既存のウェブドライバを破棄して新規作成
-            if self.driver: self.__close()
-            self.__new(options, realm)
-            # ページを開く
-            self.__open(url)
-        elif self.driver is None:
-            # 既存のウェブドライバがない場合は新規作成
-            self.__new(options, realm)
+        # 既存のウェブドライバがある場合
+        if self.driver:
+            # ページ遷移しない場合
+            if url == self.session.url:
+                # 既存のウェブドライバをそのまま使う
+                self.renewed = False
+                return
+            # ページ遷移する場合
+            else:
+                # 既存のウェブドライバを破棄
+                self.__close()
+        # ウェブドライバを新規作成
+        self.__new(options, realm)
+        self.renewed = True
+        # ページを開く
+        self.__open(url)
 
     def __new(self, options, realm):
         # ウェブドライバを作成
@@ -135,7 +148,7 @@ class Chrome:
         self.session.save(self.driver)
         # セッションのメンテナンスを開始
         args = (self.driver.command_executor._url, self.driver.session_id, realm)
-        threading.Thread(target=self.watchdog, args=args).start()
+        threading.Thread(target=self.__watchdog, args=args).start()
 
     def __open(self, url):
         # ウィンドウサイズをリセット
@@ -193,7 +206,7 @@ class Chrome:
             f.write(element.text.encode('utf-8'))
             f.close()
 
-    def watchdog(self, executor_url, session_id, realm):
+    def __watchdog(self, executor_url, session_id, realm):
         monitor = xbmc.Monitor()
         while not monitor.abortRequested():
             # 停止を待機
@@ -205,6 +218,8 @@ class Chrome:
             elif data['executor_url'] != executor_url:
                 break
             elif data['session_id'] != session_id:
+                break
+            elif data['timestamp'] + 180 < int(datetime.datetime.now().strftime('%s')):
                 break
         # ウェブドライバを終了
         self.driver.quit()

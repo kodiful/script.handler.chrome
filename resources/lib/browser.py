@@ -3,6 +3,7 @@
 import sys, os, json, urllib, hashlib
 import shutil
 import traceback
+import datetime
 import xbmc, xbmcgui, xbmcplugin, xbmcaddon
 
 from chrome import Chrome
@@ -16,61 +17,18 @@ from StringIO import StringIO
 #-------------------------------------------------------------------------------
 class Builder:
 
-    def current_page(self):
-        # アイテムを作成
-        label = '[COLOR white]%s[/COLOR]' % self.driver.title.replace('\n',' ').encode('utf-8') or '(Untitled)'
-        page_image_file = self.page_image_file
-        item = xbmcgui.ListItem(label, iconImage=page_image_file, thumbnailImage=page_image_file)
-        # コンテクストメニューを設定
-        menu = []
-        item.addContextMenuItems(menu, replaceItems=True)
-        # アイテムを追加
-        values = {'action':'show_image', 'image_file':page_image_file}
-        query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
-        xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, False)
-
-    def current_node(self):
-        # アイテムを作成
-        label = '[COLOR yellow]%s[/COLOR]' % self.elem.text.replace('\n',' ').encode('utf-8') or '(Untitled)'
-        node_image_file = self.node_image_file
-        item = xbmcgui.ListItem(label, iconImage=node_image_file, thumbnailImage=node_image_file)
-        # コンテクストメニューを設定
-        menu = []
-        #### ノードリストを表示する
-        (label, query) = self.show_childnodes(self.xpath)
-        menu.append((label, 'Container.Update(%s)' % query))
-        #### リンクリストを表示する
-        (label, query) = self.show_links(self.xpath)
-        menu.append((label, 'Container.Update(%s)' % query))
-        #### キャプチャを表示する
-        (label, query) = self.show_image(self.xpath)
-        menu.append((label, 'RunPlugin(%s)' % query))
-        #### テキストを表示する
-        (label, query) = self.show_text(self.xpath)
-        menu.append((label, 'RunPlugin(%s)' % query))
-        #### テキストを音声合成する
-        if self.addon.getSetting('tts'):
-            (label, query) = self.play_wav(self.xpath)
-            menu.append((label, 'RunPlugin(%s)' % query))
-        #### トップに追加する
-        (label, query) = self.add_to_top(self.xpath)
-        menu.append((label, 'Container.Update(%s)' % query))
-        item.addContextMenuItems(menu, replaceItems=True)
-        # アイテムを追加
-        values = {'action':'show_image', 'image_file':node_image_file}
-        query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
-        xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, False)
-
     def show_childnodes(self, xpath):
         label = self.addon.getLocalizedString(32914)
         values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'target':Browser.TARGET_NODELIST}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
+        query = 'Container.Update(%s)' % query
         return (label, query)
 
     def show_links(self, xpath):
         label = self.addon.getLocalizedString(32915)
         values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'target':Browser.TARGET_LINKLIST}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
+        query = 'Container.Update(%s)' % query
         return (label, query)
 
     def show_image(self, xpath):
@@ -78,6 +36,7 @@ class Builder:
         values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'target':Browser.TARGET_CAPTURE}
         #values = {'action':'show_image', 'image_file':self.node_image_file}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
+        query = 'RunPlugin(%s)' % query
         return (label, query)
 
     def show_text(self, xpath):
@@ -85,19 +44,64 @@ class Builder:
         values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'target':Browser.TARGET_TEXT}
         #values = {'action':'show_text', 'text_file':self.node_text_file, 'title':self.driver.title.encode('utf-8')}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
+        query = 'RunPlugin(%s)' % query
         return (label, query)
 
     def play_wav(self, xpath):
         label = self.addon.getLocalizedString(32918)
         values = {'action':'extract', 'url':self.url, 'xpath':xpath, 'target':Browser.TARGET_WAV}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
+        query = 'RunPlugin(%s)' % query
         return (label, query)
 
-    def add_to_top(self, xpath):
+    def add_to_top(self, xpath, content=None):
         label = self.addon.getLocalizedString(32919)
-        values = {'action':'append', 'label':self.driver.title.encode('utf-8'), 'url':self.url, 'xpath':xpath, 'target':self.target}
+        values = {'action':'append', 'label':content or self.driver.title.encode('utf-8'), 'url':self.url, 'xpath':xpath, 'target':self.target}
         query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
+        query = 'RunPlugin(%s)' % query
         return (label, query)
+
+    def current_page(self):
+        # アイテムを作成
+        content = self.driver.title.replace('\n',' ').encode('utf-8') or '(Untitled)'
+        label = '[COLOR white]%s[/COLOR]' % content
+        page_image_file = self.page_image_file
+        item = xbmcgui.ListItem(label, iconImage=page_image_file, thumbnailImage=page_image_file)
+        # コンテクストメニューを設定
+        context_menu = []
+        item.addContextMenuItems(context_menu, replaceItems=True)
+        # アイテムを追加
+        values = {'action':'show_image', 'image_file':page_image_file}
+        query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
+        xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, False)
+
+    def current_node(self):
+        # アイテムを作成
+        content = self.elem.text.replace('\n',' ').encode('utf-8') or '(Untitled)'
+        label = '[COLOR yellow]%s[/COLOR]' % content
+        node_image_file = self.node_image_file
+        item = xbmcgui.ListItem(label, iconImage=node_image_file, thumbnailImage=node_image_file)
+        # コンテクストメニュー
+        context_menu = []
+        #### ノードリストを表示する
+        context_menu.append(self.show_childnodes(self.xpath))
+        #### リンクリストを表示する
+        context_menu.append(self.show_links(self.xpath))
+        #### キャプチャを表示する
+        context_menu.append(self.show_image(self.xpath))
+        #### テキストを表示する
+        context_menu.append(self.show_text(self.xpath))
+        #### テキストを音声合成する
+        if self.addon.getSetting('tts'):
+            context_menu.append(self.play_wav(self.xpath))
+        #### トップに追加する
+        context_menu.append(self.add_to_top(self.xpath,content))
+        # コンテクストメニューを設定
+        item.addContextMenuItems(context_menu, replaceItems=True)
+        # アイテムを追加
+        values = {'action':'show_image', 'image_file':node_image_file}
+        query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
+        xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, False)
 
     def nodelist(self, xpath):
         list = []
@@ -121,32 +125,28 @@ class Builder:
                     text_file = os.path.join(self.cachedir, '%s_%s.txt' % (self.driver.session_id,hashlib.md5(xpath2).hexdigest()))
                     if not os.path.isfile(text_file):
                         self.chrome.save_text(text_file, element=elems[i])
+                    # ラベル
+                    content = elems[i].text.replace('\n',' ').encode('utf-8')
                     # コンテクストメニュー設定
                     context_menu = []
                     #### ノードリストを表示する
-                    (label, query) = self.show_childnodes(xpath2)
-                    context_menu.append((label, 'Container.Update(%s)' % query))
+                    context_menu.append(self.show_childnodes(xpath2))
                     #### リンクリストを表示する
-                    (label, query) = self.show_links(xpath2)
-                    context_menu.append((label, 'Container.Update(%s)' % query))
+                    context_menu.append(self.show_links(xpath2))
                     #### キャプチャを表示する
-                    (label, query) = self.show_image(xpath2)
-                    context_menu.append((label, 'RunPlugin(%s)' % query))
+                    context_menu.append(self.show_image(xpath2))
                     #### テキストを表示する
-                    (label, query) = self.show_text(xpath2)
-                    context_menu.append((label, 'RunPlugin(%s)' % query))
+                    context_menu.append(self.show_text(xpath2))
                     #### テキストを音声合成する
                     if self.addon.getSetting('tts'):
-                        (label, query) = self.play_wav(xpath2)
-                        context_menu.append((label, 'RunPlugin(%s)' % query))
+                        context_menu.append(self.play_wav(xpath2))
                     #### トップに追加する
-                    (label, query) = self.add_to_top(xpath2)
-                    context_menu.append((label, 'Container.Update(%s)' % query))
+                    context_menu.append(self.add_to_top(xpath2,content))
                     #### リンクを抽出してコンテクストメニューに設定
                     for (label, query) in self.linklist(elems[i]):
                         context_menu.append((label, 'Container.Update(%s)' % query))
                     # データを格納
-                    label = '[COLOR orange]%s[/COLOR]' % elems[i].text.replace('\n',' ')
+                    label = '[COLOR orange]%s[/COLOR]' % content
                     values = {'action':'show_image', 'image_file':image_file}
                     query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
                     list.append((label, query, image_file, text_file, context_menu))
@@ -163,7 +163,7 @@ class Builder:
         for a in elem.find_elements_by_xpath(".//a[starts-with(@href,'http')]"):
             if a.text.replace(' ','').replace('\n',''):
                 label = '[COLOR blue]%s[/COLOR]' % a.text.replace('\n',' ')
-                values = {'action':'extract', 'url':a.get_attribute('href'), 'target':Browser.TARGET_NODELIST, 'renew':True}
+                values = {'action':'extract', 'url':a.get_attribute('href'), 'target':Browser.TARGET_NODELIST}
                 query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
                 list.append((label, query))
         return list
@@ -178,28 +178,30 @@ class Browser(Builder):
     TARGET_WAV = 4
     TARGET_FILES = 99
 
-    def __init__(self, url=None, realm=None):
+    def __init__(self, url, realm=None):
         # アドオン
         self.addon = xbmcaddon.Addon()
         addon_id = self.addon.getAddonInfo('id')
         addon_profile = self.addon.getAddonInfo('profile')
-        # キャッシュディレクトリを作成
+        # キャッシュディレクトリを設定
         self.cachedir = os.path.join(xbmc.translatePath(addon_profile), realm or addon_id, 'cache')
-        if not os.path.isdir(self.cachedir):
-            os.makedirs(self.cachedir)
-        # 新しいページを開く場合はキャッシュディレクトリをクリア
-        if url:
-            for filename in os.listdir(self.cachedir):
-                os.remove(os.path.join(self.cachedir, filename))
+        if not os.path.isdir(self.cachedir): os.makedirs(self.cachedir)
         # ウェブドライバを設定
         self.chrome = Chrome(url, realm)
         self.driver = self.chrome.driver
+        self.url = url
+        # ページ遷移した場合はキャッシュディレクトリをクリアする
+        if self.chrome.renewed: self.clear()
+
+    def clear(self):
+        # キャッシュディレクトリをクリア
+        for filename in os.listdir(self.cachedir):
+            os.remove(os.path.join(self.cachedir, filename))
 
     def extract(self, xpath=None, target=None, image_file=None, text_file=None, wav_file=None):
-        self.url = self.chrome.session.url
         self.xpath = xpath or '//html'
         self.target = target and int(target)
-        log([self.url,self.xpath,self.target])
+        #log([self.url,self.xpath,self.target])
         # 画面全体をキャプチャ
         self.page_image_file = os.path.join(self.cachedir, '%s.png' % (self.driver.session_id))
         if not os.path.isfile(self.page_image_file):
