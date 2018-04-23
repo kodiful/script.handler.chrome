@@ -7,6 +7,7 @@ import sys, os, json
 import datetime
 
 from resources.lib.browser import Browser, Google
+from resources.lib.image import Image as Img
 from resources.lib.common import log, notify
 from resources.lib.utilities import show_image, show_text
 
@@ -50,7 +51,7 @@ class Arguments:
         'text_file':    '',
         'title':        '',
         'wav_file':     '',
-        'keyword':     '',
+        'keyword':      '',
     }
 
     def __init__(self):
@@ -231,9 +232,9 @@ class Main:
             context_menu.append((self.addon.getLocalizedString(32913), 'Addon.OpenSettings(%s)' % self.addon.getAddonInfo('id')))
             # アイテム追加
             if flag:
-                item = xbmcgui.ListItem('[COLOR yellow]%s[/COLOR]' % (label or url))
+                item = xbmcgui.ListItem('[COLOR yellow]%s[/COLOR]' % (label or url), iconImage=Img.INFO100, thumbnailImage=Img.INFO500)
             else:
-                item = xbmcgui.ListItem(label or url)
+                item = xbmcgui.ListItem(label or url, iconImage=Img.INFO100, thumbnailImage=Img.INFO500)
             item.addContextMenuItems(context_menu, replaceItems=True)
             values = {'action':'extract', 'url':url, 'xpath':xpath, 'target':target}
             query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))

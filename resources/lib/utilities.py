@@ -14,13 +14,5 @@ def show_text(text_file, title=None):
         f.close()
     else:
         data = ''
-    # テキストビューア
-    viewer_id = 10147
-    # ウィンドウを開く
-    xbmc.executebuiltin('ActivateWindow(%s)' % viewer_id)
-    # ウィンドウの用意ができるまで1秒待つ
-    xbmc.sleep(1000)
-    # ウィンドウへ書き込む
-    viewer = xbmcgui.Window(viewer_id)
-    viewer.getControl(1).setLabel(title or '(Selected Node)')
-    viewer.getControl(5).setText(data)
+    # テキストビューアに表示
+    xbmcgui.Dialog().textviewer(title or '(Selected Node)', data)

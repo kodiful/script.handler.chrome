@@ -7,6 +7,7 @@ import datetime
 import xbmc, xbmcgui, xbmcplugin, xbmcaddon
 
 from chrome import Chrome
+from image import Image as Img
 from xpath import getPartialXPath, extractNodes
 from common import log, notify
 from utilities import show_image, show_text
@@ -266,7 +267,7 @@ class Google(Builder):
         self.current_page()
         # リンクのリスト
         for (label, query) in list:
-            item = xbmcgui.ListItem(label)
+            item = xbmcgui.ListItem(label, iconImage=Img.LINK100, thumbnailImage=Img.LINK500)
             xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, True)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
         # ウェブドライバを終了
@@ -367,7 +368,7 @@ class Browser(Builder):
         self.current_node()
         # リンクのリスト
         for (label, query) in self.linklist(self.elem):
-            item = xbmcgui.ListItem(label)
+            item = xbmcgui.ListItem(label, iconImage=Img.LINK100, thumbnailImage=Img.LINK500)
             xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, True)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
@@ -408,7 +409,7 @@ class Browser(Builder):
         self.current_node()
         # リンクのリスト
         for (label, query) in self.linklist(self.elem):
-            item = xbmcgui.ListItem(label)
+            item = xbmcgui.ListItem(label, iconImage=Img.LINK100, thumbnailImage=Img.LINK500)
             xbmcplugin.addDirectoryItem(int(sys.argv[1]), query, item, True)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
