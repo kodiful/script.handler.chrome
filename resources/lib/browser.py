@@ -398,9 +398,10 @@ class Browser(Builder):
             while not os.path.exists(self.node_wav_file):
                 xbmc.sleep(1)
         if play:
+            xbmc.executebuiltin('PlayMedia(%s)' % self.node_wav_file)
             #show_image(self.node_image_file)
             show_text(self.node_text_file, self.driver.title.encode('utf-8'))
-            xbmc.executebuiltin('PlayMedia(%s)' % self.node_wav_file)
+        xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=False)
 
     def __extract_search_results(self):
         # 親ページを表示する
