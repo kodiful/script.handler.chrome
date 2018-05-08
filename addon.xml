@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="script.handler.selenium"
-       name="Selenium Handler"
+<addon id="script.handler.chrome"
+       name="Chrome Handler"
        version="1.0"
        provider-name="kodiful">
   <requires>
@@ -14,8 +14,8 @@
     <platform>all</platform>
     <summary lang="en">Web browser</summary>
     <summary lang="ja">ウェブブラウザ</summary>
-    <description lang="en">Web browsing through Selenium</description>
-    <description lang="ja">Seleniumによるウェブブラウジング</description>
+    <description lang="en">Web browsing through Chrome & Selenium</description>
+    <description lang="ja">Chrome & Seleniumによるウェブブラウジング</description>
     <disclaimer lang="en">Tested on macOS</disclaimer>
     <disclaimer lang="ja">macOSでの動作を確認</disclaimer>
     <website>http://kodiful.com/</website>
