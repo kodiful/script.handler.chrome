@@ -14,8 +14,8 @@
     <platform>all</platform>
     <summary lang="en">Web browser</summary>
     <summary lang="ja">ウェブブラウザ</summary>
-    <description lang="en">Web browsing through Chrome & Selenium</description>
-    <description lang="ja">Chrome & Seleniumによるウェブブラウジング</description>
+    <description lang="en">Web browsing through Chrome &amp; Selenium</description>
+    <description lang="ja">Chrome &amp; Seleniumによるウェブブラウジング</description>
     <disclaimer lang="en">Tested on macOS</disclaimer>
     <disclaimer lang="ja">macOSでの動作を確認</disclaimer>
     <website>http://kodiful.com/</website>
