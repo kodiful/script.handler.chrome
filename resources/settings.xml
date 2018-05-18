@@ -13,7 +13,7 @@
     <setting label="32203" id="xpath" type="text" default="//html" visible="!eq(-2,)+!eq(-3,)"/>
     <setting label="32204" id="target1" type="enum" lvalues="32902|32901|32903|32904" default="0" visible="!eq(-3,)+!eq(-4,)+eq(-5,)"/>
     <setting label="32204" id="target2" type="enum" lvalues="32902|32901|32903|32904|32905" default="0" visible="!eq(-4,)+!eq(-5,)+!eq(-6,)"/>
-    <setting label="32206" type="action" option="close" action="RunPlugin(plugin://$ID/?action=edited)" enable="!eq(-5,)+!eq(-5,http://)+!eq(-5,https://)" visible="eq(-6,)"/>
+    <setting label="32206" type="action" option="close" action="RunPlugin(plugin://$ID/?action=open)" enable="!eq(-5,)+!eq(-5,http://)+!eq(-5,https://)" visible="eq(-6,)"/>
     <setting label="32207" type="action" option="close" action="RunPlugin(plugin://$ID/?action=edited)" enable="!eq(-6,)+!eq(-6,http://)+!eq(-6,https://)+!eq(-5,)+!eq(-4,)" visible="!eq(-7,)"/>
   </category>
   <category label="32400">

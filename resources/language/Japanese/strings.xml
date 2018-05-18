@@ -11,17 +11,17 @@
   <string id="32202">ラベル</string>
   <string id="32203">XPATH</string>
   <string id="32204">表示モード</string>
-  <string id="32206">[COLOR green]追加する[/COLOR]</string>
+  <string id="32206">[COLOR green]子ノードを表示する[/COLOR]</string>
   <string id="32207">[COLOR green]更新する[/COLOR]</string>
 
   <string id="32300">その他</string>
   <string id="32301">chromedriverのパス</string>
-  <string id="32302">スクリーンサイズ</string>
+  <string id="32302">ユーザエージェント</string>
   <string id="32303">デバッグ</string>
 
   <string id="32400">ウェブ検索</string>
   <string id="32401">キーワード</string>
-  <string id="32402">[COLOR green]検索する[/COLOR]</string>
+  <string id="32402">[COLOR green]検索してリンクを表示する[/COLOR]</string>
 
   <string id="32901">リンクを表示する</string>
   <string id="32902">子ノードを表示する</string>

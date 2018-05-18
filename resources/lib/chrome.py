@@ -19,7 +19,7 @@ from selenium.webdriver.common.keys import Keys
 #-------------------------------------------------------------------------------
 class Session:
 
-    def __init__(self, realm):
+    def __init__(self, realm=None):
         # アドオン
         self.addon = xbmcaddon.Addon()
         addon_id = self.addon.getAddonInfo('id')
@@ -186,7 +186,7 @@ class Chrome:
             # セッション情報をクリア
             self.session.clear()
 
-    def save_image(self, image_file, element=None, xpath=None):
+    def save_image(self, imgfile, element=None, xpath=None):
         # 画面全体のイメージを取得
         screenshot = self.driver.get_screenshot_as_png()
         image = Image.open(StringIO(screenshot))
@@ -206,12 +206,12 @@ class Chrome:
             right = min(location['x']+size['width'], window['width'])
             bottom = min(location['y']+size['height'], window['height'])
             if bottom > top and right > left:
-                image.crop((int(left), int(top), int(right), int(bottom))).save(image_file)
+                image.crop((int(left), int(top), int(right), int(bottom))).save(imgfile)
         else:
             # 画面全体
-            image.save(image_file)
+            image.save(imgfile)
 
-    def save_text(self, text_file, element=None, xpath=None):
+    def save_text(self, txtfile, element=None, xpath=None):
         # 指定部分を抽出
         if element:
             pass
@@ -219,7 +219,7 @@ class Chrome:
             element = self.driver.find_element_by_xpath(xpath)
         # キャプチャ
         if element:
-            f = open(text_file,'w')
+            f = open(txtfile,'w')
             f.write(element.text.encode('utf-8'))
             f.close()
 

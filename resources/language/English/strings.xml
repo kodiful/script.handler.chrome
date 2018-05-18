@@ -11,17 +11,17 @@
   <string id="32202">Label</string>
   <string id="32203">XPATH</string>
   <string id="32204">Mode</string>
-  <string id="32206">[COLOR green]Append[/COLOR]</string>
+  <string id="32206">[COLOR green]Show childnodes[/COLOR]</string>
   <string id="32207">[COLOR green]Update[/COLOR]</string>
 
   <string id="32300">Others</string>
   <string id="32301">Path to chromedriver</string>
-  <string id="32302">Screen size</string>
+  <string id="32302">User agent</string>
   <string id="32303">Debug</string>
 
   <string id="32400">Web search</string>
   <string id="32401">Keyword</string>
-  <string id="32402">[COLOR green]Search[/COLOR]</string>
+  <string id="32402">[COLOR green]Search &amp; show links[/COLOR]</string>
 
   <string id="32901">Link list</string>
   <string id="32902">ChildNode list</string>

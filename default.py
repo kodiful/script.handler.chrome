@@ -47,10 +47,10 @@ class Arguments:
         'xpath':        '',
         'target':       '',
         'itemid':       '',
-        'image_file':   '',
-        'text_file':    '',
+        'imgfile':      '',
+        'txtfile':      '',
         'title':        '',
-        'wav_file':     '',
+        'wavfile':      '',
         'keyword':      '',
     }
 
@@ -63,7 +63,7 @@ class Arguments:
 
     def values(self):
         args = []
-        for key in ('realm','action','label','url','xpath','target','itemid','image_file','text_file','title','wav_file','keyword'):
+        for key in ('realm','action','label','url','xpath','target','itemid','imgfile','txtfile','title','wavfile','keyword'):
             args.append(self.data[key])
         return args
 
@@ -175,6 +175,11 @@ class Main:
         # スタート画面を更新
         xbmc.executebuiltin('Container.Update(%s)' % sys.argv[0])
 
+    def open(self, settings):
+        url = settings['url']
+        values = {'action':'extract', 'url':url, 'target':Browser.TARGET_NODELIST}
+        xbmc.executebuiltin('Container.Update(%s?%s)' % (sys.argv[0], urllib.urlencode(values)))
+
     def search(self, settings):
         keyword = settings['keyword'].decode('utf-8')
         values = {'action':'show_search', 'keyword':keyword}
@@ -232,9 +237,22 @@ class Main:
             context_menu.append((self.addon.getLocalizedString(32913), 'Addon.OpenSettings(%s)' % self.addon.getAddonInfo('id')))
             # アイテム追加
             if flag:
-                item = xbmcgui.ListItem('[COLOR yellow]%s[/COLOR]' % (label or url), iconImage=Img.INFO100, thumbnailImage=Img.INFO500)
+                italic = '[I]%s[/I]'
             else:
-                item = xbmcgui.ListItem(label or url, iconImage=Img.INFO100, thumbnailImage=Img.INFO500)
+                italic = '%s'
+            if target == Browser.TARGET_NODELIST:
+                color = '[COLOR orange]%s[/COLOR]'
+            elif target == Browser.TARGET_LINKLIST:
+                color = '[COLOR blue]%s[/COLOR]'
+            elif target == Browser.TARGET_CAPTURE:
+                color = '[COLOR palegreen]%s[/COLOR]'
+            elif target == Browser.TARGET_TEXT:
+                color = '[COLOR cyan]%s[/COLOR]'
+            elif target == Browser.TARGET_WAV:
+                color = '[COLOR mediumpurple]%s[/COLOR]'
+            else:
+                color = '%s'
+            item = xbmcgui.ListItem(italic % (color % (label or url)), iconImage=Img.INFO100, thumbnailImage=Img.INFO500)
             item.addContextMenuItems(context_menu, replaceItems=True)
             values = {'action':'extract', 'url':url, 'xpath':xpath, 'target':target}
             query = '%s?%s' % (sys.argv[0], urllib.urlencode(values))
@@ -257,7 +275,7 @@ if __name__  == '__main__':
     # chromedriverの設定を確認
     if addon.getSetting('chrome'):
         # 引数
-        (realm,action,label,url,xpath,target,itemid,image_file,text_file,title,wav_file,keyword) = Arguments().values()
+        (realm,action,label,url,xpath,target,itemid,imgfile,txtfile,title,wavfile,keyword) = Arguments().values()
         # アドオン設定
         settings = Settings().values()
         # actionに応じて処理
@@ -273,16 +291,18 @@ if __name__  == '__main__':
             Main().edited(settings)
         elif action == 'delete':
             Main().delete(itemid)
+        elif action == 'open':
+            Main().open(settings)
         elif action == 'search':
             Main().search(settings)
         elif action == 'show_search':
             Google().extract(keyword)
         elif action == 'show_image':
-            show_image(image_file)
+            show_image(imgfile)
         elif action == 'show_text':
-            show_text(text_file, title)
+            show_text(txtfile, title)
         # for execution from other addons
         elif action == 'files':
-            Browser(url, realm).extract(xpath, target=Browser.TARGET_FILES, image_file=image_file, text_file=text_file, wav_file=wav_file)
+            Browser(url, realm).extract(xpath, target=Browser.TARGET_FILES, imgfile=imgfile, txtfile=txtfile, wavfile=wavfile)
     else:
         addon.openSettings()
